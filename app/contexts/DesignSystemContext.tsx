@@ -51,13 +51,17 @@ export const DesignSystemProvider: React.FC<{ children: React.ReactNode }> = ({
     updatedSystem: DesignSystemContextType["designSystem"]
   ) => {
     if (!updatedSystem) return;
-    setDesignSystem(updatedSystem);
     try {
-      await fetch("/api/design-system", {
-        method: "PUT",
+      const response = await fetch("/api/design-system", {
+        method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(updatedSystem),
       });
+      if (!response.ok) {
+        throw new Error("Failed to update design system");
+      }
+      const data = await response.json();
+      setDesignSystem(data);
     } catch (error) {
       console.error("Failed to update design system:", error);
       // Optionally, revert the local state if the update fails

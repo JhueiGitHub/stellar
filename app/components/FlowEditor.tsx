@@ -6,14 +6,18 @@ import { debounce } from "lodash";
 
 const FlowEditor: React.FC = () => {
   const { activeFlowId, flows } = useFlowStore();
-  const { designSystem, isLoading: isDesignSystemLoading } = useDesignSystem();
+  const { designSystem, isLoading: isDesignSystemLoading, updateDesignSystem } = useDesignSystem();
   const { getColor, getFont, updateColor, updateFont } = useStyles();
   const [canvasComponents, setCanvasComponents] = useState<any[]>([]);
 
   useEffect(() => {
-    if (activeFlowId && !isDesignSystemLoading) {
+    if (activeFlowId && !isDesignSystemLoading && designSystem) {
       const activeFlow = flows.find((flow) => flow.id === activeFlowId);
-      if (activeFlow && designSystem) {
+      if (activeFlow) {
+        const flowComponents = activeFlow.components.map(component => ({
+          ...component,
+          isFlowComponent: true
+        }));
         const designSystemComponents = [
           ...designSystem.colorTokens.map((token) => ({
             id: token.id,
@@ -21,44 +25,63 @@ const FlowEditor: React.FC = () => {
             name: token.name,
             value: token.value,
             opacity: token.opacity,
+            isDesignSystemComponent: true
           })),
           ...designSystem.typographyTokens.map((token) => ({
             id: token.id,
             type: "typography",
             name: token.name,
             fontFamily: token.fontFamily,
-            fontSize: token.fontSize,
-            fontWeight: token.fontWeight,
-            lineHeight: token.lineHeight,
-            letterSpacing: token.letterSpacing,
+            isDesignSystemComponent: true
           })),
         ];
-        setCanvasComponents([
-          ...activeFlow.components,
-          ...designSystemComponents,
-        ]);
+        setCanvasComponents([...flowComponents, ...designSystemComponents]);
       }
     }
   }, [activeFlowId, flows, designSystem, isDesignSystemLoading]);
 
-  const handleComponentUpdate = debounce(
-    (componentId: string, updates: any) => {
-      setCanvasComponents((prevComponents) =>
-        prevComponents.map((comp) =>
-          comp.id === componentId ? { ...comp, ...updates } : comp
-        )
-      );
+  const handleComponentUpdate = debounce(async (componentId: string, updates: any) => {
+    if (!designSystem || !activeFlowId) return;
 
-      if (updates.type === "color") {
-        updateColor(updates.name, updates.value, updates.opacity);
-      } else if (updates.type === "typography") {
-        updateFont(updates.name, updates.value);
+    const updatedComponents = canvasComponents.map(comp =>
+      comp.id === componentId ? { ...comp, ...updates } : comp
+    );
+
+    setCanvasComponents(updatedComponents);
+
+    try {
+      const flowComponents = updatedComponents.filter(comp => comp.isFlowComponent);
+      const response = await fetch(`/api/flows/${activeFlowId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ components: flowComponents }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update flow');
       }
 
-      // TODO: Update the flow in the database
-    },
-    300
-  );
+      const updatedFlow = await response.json();
+      useFlowStore.getState().updateFlow(updatedFlow);
+
+      // Update design system if the updated component is a design system component
+      const updatedComponent = updatedComponents.find(comp => comp.id === componentId);
+      if (updatedComponent && updatedComponent.isDesignSystemComponent) {
+        if (updatedComponent.type === 'color') {
+          await updateColor(updatedComponent.name, updatedComponent.value, updatedComponent.opacity);
+        } else if (updatedComponent.type === 'typography') {
+          await updateFont(updatedComponent.name, updatedComponent.fontFamily);
+        }
+      }
+
+    } catch (error) {
+      console.error("Failed to update flow:", error);
+      // Revert the change in the local state if the API call fails
+      setCanvasComponents(prevComponents => prevComponents.map(comp =>
+        comp.id === componentId ? { ...comp, ...designSystem.colorTokens.find(token => token.id === componentId) } : comp
+      ));
+    }
+  }, 300);
 
   if (isDesignSystemLoading) {
     return <div>Loading...</div>;

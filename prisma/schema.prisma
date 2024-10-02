@@ -82,7 +82,9 @@ model FlowComponent {
   id        String   @id @default(cuid())
   name      String
   type      String // e.g., "color", "typography"
-  value     String // JSON string containing component data
+  value     String?
+  opacity   Int?
+  fontFamily String?
   flowId    String
   flow      Flow     @relation(fields: [flowId], references: [id])
   createdAt DateTime @default(now())

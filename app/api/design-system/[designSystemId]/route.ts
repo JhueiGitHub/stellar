@@ -24,7 +24,10 @@ export async function PATCH(
         colorTokens: {
           deleteMany: {},
           createMany: {
-            data: colorTokens,
+            data: colorTokens.map((token: any) => ({
+              ...token,
+              opacity: token.opacity ? parseInt(token.opacity.toString(), 10) : null,
+            })),
           },
         },
         typographyTokens: {

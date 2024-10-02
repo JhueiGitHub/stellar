@@ -1,10 +1,14 @@
 // app/api/flows/[flowId]/route.ts
 
-import { NextResponse } from 'next/server';
-import { db } from '@/lib/db';
-import { currentProfile } from '@/lib/current-profile';
+import { NextResponse } from "next/server";
+import { db } from "@/lib/db";
+import { currentProfile } from "@/lib/current-profile";
+import { Flow, FlowComponent } from "@prisma/client";
 
-export async function GET(req: Request, { params }: { params: { flowId: string } }) {
+export async function GET(
+  req: Request,
+  { params }: { params: { flowId: string } }
+) {
   try {
     const profile = await currentProfile();
     if (!profile) {
@@ -21,23 +25,61 @@ export async function GET(req: Request, { params }: { params: { flowId: string }
     }
 
     return NextResponse.json(flow);
-  } catch (error) {
+  } catch (error: unknown) {
     console.error("[FLOW_GET]", error);
     return new NextResponse("Internal Error", { status: 500 });
   }
 }
 
-export async function PATCH(req: Request, { params }: { params: { flowId: string } }) {
+export async function PATCH(
+  req: Request,
+  { params }: { params: { flowId: string } }
+) {
   try {
     const profile = await currentProfile();
     if (!profile) {
       return new NextResponse("Unauthorized", { status: 401 });
     }
 
-    const { name, description } = await req.json();
+    const { components } = await req.json();
+
     const updatedFlow = await db.flow.update({
-      where: { id: params.flowId, profileId: profile.id },
-      data: { name, description },
+      where: {
+        id: params.flowId,
+        profileId: profile.id,
+      },
+      data: {
+        components: {
+          deleteMany: {},
+          createMany: {
+            data: components.map((component: any) => {
+              const baseComponent = {
+                type: component.type,
+                name: component.name,
+              };
+
+              if (component.type === 'color') {
+                return {
+                  ...baseComponent,
+                  value: component.value,
+                  opacity: component.opacity ? parseInt(component.opacity as string, 10) : null,
+                };
+              } else if (component.type === 'typography') {
+                return {
+                  ...baseComponent,
+                  fontFamily: component.fontFamily,
+                  value: component.fontFamily, // Use fontFamily as value for typography components
+                };
+              }
+
+              return baseComponent;
+            }),
+          },
+        },
+      },
+      include: {
+        components: true,
+      },
     });
 
     return NextResponse.json(updatedFlow);
@@ -47,7 +89,10 @@ export async function PATCH(req: Request, { params }: { params: { flowId: string
   }
 }
 
-export async function DELETE(req: Request, { params }: { params: { flowId: string } }) {
+export async function DELETE(
+  req: Request,
+  { params }: { params: { flowId: string } }
+) {
   try {
     const profile = await currentProfile();
     if (!profile) {
@@ -59,7 +104,7 @@ export async function DELETE(req: Request, { params }: { params: { flowId: strin
     });
 
     return new NextResponse(null, { status: 204 });
-  } catch (error) {
+  } catch (error: unknown) {
     console.error("[FLOW_DELETE]", error);
     return new NextResponse("Internal Error", { status: 500 });
   }
