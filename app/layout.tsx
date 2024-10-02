@@ -1,5 +1,6 @@
 import "./globals.css";
 import { ClerkProvider } from "@clerk/nextjs";
+import { DesignSystemProvider } from "./contexts/DesignSystemContext";
 
 export const metadata = {
   title: "NextJS OS",
@@ -14,7 +15,9 @@ export default function RootLayout({
   return (
     <ClerkProvider>
       <html lang="en">
-        <body>{children}</body>
+        <DesignSystemProvider>
+          <body>{children}</body>
+        </DesignSystemProvider>
       </html>
     </ClerkProvider>
   );

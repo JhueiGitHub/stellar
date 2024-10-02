@@ -1,9 +1,4 @@
-/**
- * Note: Use position fixed according to your needs
- * Desktop navbar is better positioned at the bottom
- * Mobile navbar is better positioned at bottom right.
- **/
-
+// components/ui/floating-dock.tsx
 "use client";
 
 import { cn } from "@/lib/utils";
@@ -23,15 +18,29 @@ export const FloatingDock = ({
   items,
   desktopClassName,
   mobileClassName,
+  backgroundColor,
+  borderColor,
 }: {
   items: { title: string; icon: React.ReactNode; href: string }[];
   desktopClassName?: string;
   mobileClassName?: string;
+  backgroundColor: string;
+  borderColor: string;
 }) => {
   return (
     <>
-      <FloatingDockDesktop items={items} className={desktopClassName} />
-      <FloatingDockMobile items={items} className={mobileClassName} />
+      <FloatingDockDesktop
+        items={items}
+        className={desktopClassName}
+        backgroundColor={backgroundColor}
+        borderColor={borderColor}
+      />
+      <FloatingDockMobile
+        items={items}
+        className={mobileClassName}
+        backgroundColor={backgroundColor}
+        borderColor={borderColor}
+      />
     </>
   );
 };
@@ -39,9 +48,13 @@ export const FloatingDock = ({
 const FloatingDockMobile = ({
   items,
   className,
+  backgroundColor,
+  borderColor,
 }: {
   items: { title: string; icon: React.ReactNode; href: string }[];
   className?: string;
+  backgroundColor: string;
+  borderColor: string;
 }) => {
   const [open, setOpen] = useState(false);
   return (
@@ -72,7 +85,11 @@ const FloatingDockMobile = ({
                 <Link
                   href={item.href}
                   key={item.title}
-                  className="h-10 w-10 rounded-full bg-gray-50 dark:bg-neutral-900 flex items-center justify-center"
+                  className="h-10 w-10 rounded-full flex items-center justify-center"
+                  style={{
+                    backgroundColor,
+                    border: `1px solid ${borderColor}`,
+                  }}
                 >
                   <div className="h-4 w-4">{item.icon}</div>
                 </Link>
@@ -83,9 +100,13 @@ const FloatingDockMobile = ({
       </AnimatePresence>
       <button
         onClick={() => setOpen(!open)}
-        className="h-10 w-10 rounded-full bg-gray-50 dark:bg-neutral-800 flex items-center justify-center"
+        className="h-10 w-10 rounded-full flex items-center justify-center"
+        style={{ backgroundColor, border: `1px solid ${borderColor}` }}
       >
-        <IconLayoutNavbarCollapse className="h-5 w-5 text-neutral-500 dark:text-neutral-400" />
+        <IconLayoutNavbarCollapse
+          className="h-5 w-5"
+          style={{ color: borderColor }}
+        />
       </button>
     </div>
   );
@@ -94,9 +115,13 @@ const FloatingDockMobile = ({
 const FloatingDockDesktop = ({
   items,
   className,
+  backgroundColor,
+  borderColor,
 }: {
   items: { title: string; icon: React.ReactNode; href: string }[];
   className?: string;
+  backgroundColor: string;
+  borderColor: string;
 }) => {
   let mouseX = useMotionValue(Infinity);
   return (
@@ -104,12 +129,19 @@ const FloatingDockDesktop = ({
       onMouseMove={(e) => mouseX.set(e.pageX)}
       onMouseLeave={() => mouseX.set(Infinity)}
       className={cn(
-        "mx-auto hidden md:flex h-16 gap-4 items-end  rounded-2xl bg-gray-50 dark:bg-neutral-900 px-4 pb-3",
+        "mx-auto hidden md:flex h-16 gap-4 items-end rounded-2xl px-4 pb-3",
         className
       )}
+      style={{ backgroundColor, border: `1px solid ${borderColor}` }}
     >
       {items.map((item) => (
-        <IconContainer mouseX={mouseX} key={item.title} {...item} />
+        <IconContainer
+          mouseX={mouseX}
+          key={item.title}
+          {...item}
+          backgroundColor={backgroundColor}
+          borderColor={borderColor}
+        />
       ))}
     </motion.div>
   );
@@ -120,11 +152,15 @@ function IconContainer({
   title,
   icon,
   href,
+  backgroundColor,
+  borderColor,
 }: {
   mouseX: MotionValue;
   title: string;
   icon: React.ReactNode;
   href: string;
+  backgroundColor: string;
+  borderColor: string;
 }) {
   let ref = useRef<HTMLDivElement>(null);
 
@@ -172,10 +208,15 @@ function IconContainer({
     <Link href={href}>
       <motion.div
         ref={ref}
-        style={{ width, height }}
+        style={{
+          width,
+          height,
+          backgroundColor,
+          border: `1px solid ${borderColor}`,
+        }}
         onMouseEnter={() => setHovered(true)}
         onMouseLeave={() => setHovered(false)}
-        className="aspect-square rounded-full bg-gray-200 dark:bg-neutral-800 flex items-center justify-center relative"
+        className="aspect-square rounded-full flex items-center justify-center relative"
       >
         <AnimatePresence>
           {hovered && (
@@ -183,7 +224,12 @@ function IconContainer({
               initial={{ opacity: 0, y: 10, x: "-50%" }}
               animate={{ opacity: 1, y: 0, x: "-50%" }}
               exit={{ opacity: 0, y: 2, x: "-50%" }}
-              className="px-2 py-0.5 whitespace-pre rounded-md bg-gray-100 border dark:bg-neutral-800 dark:border-neutral-900 dark:text-white border-gray-200 text-neutral-700 absolute left-1/2 -translate-x-1/2 -top-8 w-fit text-xs"
+              className="px-2 py-0.5 whitespace-pre rounded-md absolute left-1/2 -translate-x-1/2 -top-8 w-fit text-xs"
+              style={{
+                backgroundColor,
+                border: `1px solid ${borderColor}`,
+                color: borderColor,
+              }}
             >
               {title}
             </motion.div>

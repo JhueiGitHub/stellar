@@ -1,32 +1,29 @@
+// components/Desktop.tsx
 "use client";
 
 import React from "react";
-import { Profile, DesignSystem } from "@prisma/client";
 import { useAppStore } from "../store/appStore";
 import Window from "./Window";
 import Dock from "./Dock";
+import { useStyles } from "../hooks/useStyles";
 
-interface DesktopProps {
-  profile: Profile;
-  designSystem: DesignSystem & {
-    colorTokens: { id: string; name: string; value: string }[];
-    typographyTokens: {
-      id: string;
-      name: string;
-      fontFamily: string;
-      fontSize: string;
-      fontWeight: string;
-      lineHeight: string;
-      letterSpacing: string;
-    }[];
-  };
-}
-
-const Desktop: React.FC<DesktopProps> = ({ profile, designSystem }) => {
+const Desktop: React.FC = () => {
   const { openApps, activeAppId } = useAppStore();
+  const { getColor, getFont, isLoading } = useStyles();
+
+  if (isLoading) {
+    return <div>Loading...</div>; // Or any loading indicator
+  }
 
   return (
-    <div className="h-screen w-screen overflow-hidden bg-gray-900">
+    <div
+      className="h-screen w-screen overflow-hidden"
+      style={{
+        backgroundColor: getColor("Black"),
+        color: getColor("Text Primary (Hd)"),
+        fontFamily: getFont("Text Primary"),
+      }}
+    >
       {openApps.map((app) => (
         <Window key={app.id} app={app} isActive={app.id === activeAppId} />
       ))}
