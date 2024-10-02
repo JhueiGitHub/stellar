@@ -1,10 +1,28 @@
 "use client";
 
+import React from "react";
+import { Profile, DesignSystem } from "@prisma/client";
 import { useAppStore } from "../store/appStore";
-import Dock from "./Dock";
 import Window from "./Window";
+import Dock from "./Dock";
 
-const Desktop: React.FC = () => {
+interface DesktopProps {
+  profile: Profile;
+  designSystem: DesignSystem & {
+    colorTokens: { id: string; name: string; value: string }[];
+    typographyTokens: {
+      id: string;
+      name: string;
+      fontFamily: string;
+      fontSize: string;
+      fontWeight: string;
+      lineHeight: string;
+      letterSpacing: string;
+    }[];
+  };
+}
+
+const Desktop: React.FC<DesktopProps> = ({ profile, designSystem }) => {
   const { openApps, activeAppId } = useAppStore();
 
   return (
