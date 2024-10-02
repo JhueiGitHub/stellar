@@ -1,22 +1,31 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback, useMemo } from "react";
 import { useFlowStore } from "../store/flowStore";
 import { useDesignSystem } from "../contexts/DesignSystemContext";
 import { useStyles } from "../hooks/useStyles";
 import { debounce } from "lodash";
+import { ChromePicker, ColorResult } from "react-color";
+
+// Memoize CanvasComponent to prevent unnecessary re-renders
+const MemoizedCanvasComponent = React.memo(CanvasComponent);
 
 const FlowEditor: React.FC = () => {
   const { activeFlowId, flows } = useFlowStore();
-  const { designSystem, isLoading: isDesignSystemLoading, updateDesignSystem } = useDesignSystem();
-  const { getColor, getFont, updateColor, updateFont } = useStyles();
+  const {
+    designSystem,
+    isLoading: isDesignSystemLoading,
+    updateDesignSystem,
+  } = useDesignSystem();
+  const { getColor, getFont } = useStyles();
   const [canvasComponents, setCanvasComponents] = useState<any[]>([]);
 
+  // Effect to load canvas components when activeFlowId or designSystem changes
   useEffect(() => {
     if (activeFlowId && !isDesignSystemLoading && designSystem) {
       const activeFlow = flows.find((flow) => flow.id === activeFlowId);
       if (activeFlow) {
-        const flowComponents = activeFlow.components.map(component => ({
+        const flowComponents = activeFlow.components.map((component) => ({
           ...component,
-          isFlowComponent: true
+          isFlowComponent: true,
         }));
         const designSystemComponents = [
           ...designSystem.colorTokens.map((token) => ({
@@ -25,14 +34,14 @@ const FlowEditor: React.FC = () => {
             name: token.name,
             value: token.value,
             opacity: token.opacity,
-            isDesignSystemComponent: true
+            isDesignSystemComponent: true,
           })),
           ...designSystem.typographyTokens.map((token) => ({
             id: token.id,
             type: "typography",
             name: token.name,
             fontFamily: token.fontFamily,
-            isDesignSystemComponent: true
+            isDesignSystemComponent: true,
           })),
         ];
         setCanvasComponents([...flowComponents, ...designSystemComponents]);
@@ -40,48 +49,55 @@ const FlowEditor: React.FC = () => {
     }
   }, [activeFlowId, flows, designSystem, isDesignSystemLoading]);
 
-  const handleComponentUpdate = debounce(async (componentId: string, updates: any) => {
-    if (!designSystem || !activeFlowId) return;
-
-    const updatedComponents = canvasComponents.map(comp =>
-      comp.id === componentId ? { ...comp, ...updates } : comp
-    );
-
-    setCanvasComponents(updatedComponents);
-
-    try {
-      const flowComponents = updatedComponents.filter(comp => comp.isFlowComponent);
-      const response = await fetch(`/api/flows/${activeFlowId}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ components: flowComponents }),
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to update flow');
-      }
-
-      const updatedFlow = await response.json();
-      useFlowStore.getState().updateFlow(updatedFlow);
-
-      // Update design system if the updated component is a design system component
-      const updatedComponent = updatedComponents.find(comp => comp.id === componentId);
-      if (updatedComponent && updatedComponent.isDesignSystemComponent) {
-        if (updatedComponent.type === 'color') {
-          await updateColor(updatedComponent.name, updatedComponent.value, updatedComponent.opacity);
-        } else if (updatedComponent.type === 'typography') {
-          await updateFont(updatedComponent.name, updatedComponent.fontFamily);
+  // Debounced function to update design system
+  const debouncedUpdateDesignSystem = useMemo(
+    () =>
+      debounce(async (updates: any) => {
+        if (!designSystem) return;
+        try {
+          const updatedDesignSystem = {
+            ...designSystem,
+            colorTokens: designSystem.colorTokens.map((token) =>
+              updates[token.id] ? { ...token, ...updates[token.id] } : token
+            ),
+            typographyTokens: designSystem.typographyTokens.map((token) =>
+              updates[token.id] ? { ...token, ...updates[token.id] } : token
+            ),
+          };
+          await updateDesignSystem(updatedDesignSystem);
+        } catch (error) {
+          console.error("Failed to update design system:", error);
         }
-      }
+      }, 500),
+    [designSystem, updateDesignSystem]
+  );
 
-    } catch (error) {
-      console.error("Failed to update flow:", error);
-      // Revert the change in the local state if the API call fails
-      setCanvasComponents(prevComponents => prevComponents.map(comp =>
-        comp.id === componentId ? { ...comp, ...designSystem.colorTokens.find(token => token.id === componentId) } : comp
-      ));
-    }
-  }, 300);
+  // Memoized function to handle component updates
+  const handleComponentUpdate = useCallback(
+    (componentId: string, updates: any) => {
+      setCanvasComponents((prevComponents) =>
+        prevComponents.map((comp) =>
+          comp.id === componentId ? { ...comp, ...updates } : comp
+        )
+      );
+
+      if (
+        updates.value !== undefined ||
+        updates.opacity !== undefined ||
+        updates.fontFamily !== undefined
+      ) {
+        debouncedUpdateDesignSystem({ [componentId]: updates });
+      }
+    },
+    [debouncedUpdateDesignSystem]
+  );
+
+  // Memoized function to create stable onUpdate references for each component
+  const memoizedOnUpdate = useCallback(
+    (componentId: string) => (updates: any) =>
+      handleComponentUpdate(componentId, updates),
+    [handleComponentUpdate]
+  );
 
   if (isDesignSystemLoading) {
     return <div>Loading...</div>;
@@ -93,14 +109,12 @@ const FlowEditor: React.FC = () => {
         <h2 className="text-2xl font-bold mb-4">Flow Editor</h2>
         <div className="canvas bg-white border border-gray-300 p-4 min-h-screen grid grid-cols-4 gap-4">
           {canvasComponents.map((component) => (
-            <CanvasComponent
+            <MemoizedCanvasComponent
               key={component.id}
               component={component}
               getColor={getColor}
               getFont={getFont}
-              onUpdate={(updatedComponent) =>
-                handleComponentUpdate(component.id, updatedComponent)
-              }
+              onUpdate={memoizedOnUpdate(component.id)}
             />
           ))}
         </div>
@@ -116,15 +130,39 @@ interface CanvasComponentProps {
   getFont: (name: string) => string;
 }
 
-const CanvasComponent: React.FC<CanvasComponentProps> = ({
+function CanvasComponent({
   component,
   onUpdate,
   getColor,
   getFont,
-}) => {
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    onUpdate({ [e.target.name]: e.target.value });
-  };
+}: CanvasComponentProps) {
+  const [showPicker, setShowPicker] = useState(false);
+
+  const handleColorChange = useCallback(
+    (color: ColorResult) => {
+      onUpdate({
+        value: color.hex,
+        opacity: Math.round((color.rgb.a ?? 1) * 100),
+      });
+    },
+    [onUpdate]
+  );
+
+  const handleTypographyChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      onUpdate({ [e.target.name]: e.target.value });
+    },
+    [onUpdate]
+  );
+
+  const togglePicker = useCallback(
+    (e: React.MouseEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      setShowPicker((prev) => !prev);
+    },
+    []
+  );
 
   if (component.type === "color") {
     return (
@@ -132,22 +170,26 @@ const CanvasComponent: React.FC<CanvasComponentProps> = ({
         <label className="block text-sm font-medium text-gray-700">
           {component.name}
         </label>
-        <input
-          type="color"
-          name="value"
-          value={component.value}
-          onChange={handleChange}
-          className="mt-1 block w-full"
+        <div
+          className="w-full h-10 rounded cursor-pointer"
+          style={{
+            backgroundColor: component.value,
+            opacity: component.opacity / 100,
+          }}
+          onClick={togglePicker}
         />
-        <input
-          type="number"
-          name="opacity"
-          value={component.opacity}
-          onChange={handleChange}
-          min="0"
-          max="100"
-          className="mt-1 block w-full"
-        />
+        {showPicker && (
+          <div className="absolute z-10">
+            <ChromePicker
+              color={component.value}
+              onChange={handleColorChange}
+              onChangeComplete={() => setShowPicker(false)}
+            />
+          </div>
+        )}
+        <p className="mt-2 text-xs">
+          {component.value} - Opacity: {component.opacity}%
+        </p>
       </div>
     );
   } else if (component.type === "typography") {
@@ -160,14 +202,14 @@ const CanvasComponent: React.FC<CanvasComponentProps> = ({
           type="text"
           name="fontFamily"
           value={component.fontFamily}
-          onChange={handleChange}
-          className="mt-1 block w-full"
+          onChange={handleTypographyChange}
+          className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm"
         />
       </div>
     );
   }
 
   return null;
-};
+}
 
-export default FlowEditor;
+export default React.memo(FlowEditor);

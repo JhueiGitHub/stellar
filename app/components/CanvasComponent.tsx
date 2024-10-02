@@ -1,8 +1,14 @@
-// app/components/CanvasComponent.tsx
-import React from "react";
+import React, { useState, useRef, useEffect } from "react";
+import { ChromePicker, ColorResult } from "react-color";
 
 interface CanvasComponentProps {
-  component: any;
+  component: {
+    id: string;
+    type: "color" | "typography";
+    name: string;
+    value: string;
+    opacity?: number;
+  };
   onUpdate: (componentId: string, updates: any) => void;
 }
 
@@ -10,40 +16,53 @@ const CanvasComponent: React.FC<CanvasComponentProps> = ({
   component,
   onUpdate,
 }) => {
-  if (component.type === "color") {
-    return (
-      <div className="border rounded p-2">
-        <div
-          className="w-full h-20 rounded"
-          style={{
-            backgroundColor: component.value,
-            opacity: component.opacity / 100,
-          }}
-        ></div>
-        <p className="mt-2 text-sm font-semibold">{component.name}</p>
-        <p className="text-xs">{component.value}</p>
-      </div>
-    );
-  } else if (component.type === "typography") {
-    return (
-      <div className="border rounded p-2">
-        <p
-          style={{
-            fontFamily: component.fontFamily,
-            fontSize: component.fontSize,
-            fontWeight: component.fontWeight,
-            lineHeight: component.lineHeight,
-            letterSpacing: component.letterSpacing,
-          }}
-        >
-          {component.name}
-        </p>
-        <p className="text-xs mt-2">{component.fontFamily}</p>
-      </div>
-    );
-  }
+  const [showPicker, setShowPicker] = useState(false);
+  const [localColor, setLocalColor] = useState(component.value);
+  const pickerRef = useRef<HTMLDivElement>(null);
 
-  return null;
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        pickerRef.current &&
+        !pickerRef.current.contains(event.target as Node)
+      ) {
+        setShowPicker(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const handleColorChange = (color: ColorResult) => {
+    setLocalColor(color.hex);
+    // Commented out to isolate the issue:
+    // onUpdate(component.id, { value: color.hex, opacity: Math.round(color.rgb.a * 100) });
+  };
+
+  const handleClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setShowPicker(true);
+    console.log("Color icon clicked"); // Debugging log
+  };
+
+  if (component.type !== "color") return null;
+
+  return (
+    <div className="relative">
+      <div
+        className="w-20 h-20 rounded cursor-pointer"
+        style={{ backgroundColor: localColor }}
+        onClick={handleClick}
+      />
+      {showPicker && (
+        <div className="absolute z-10 mt-2" ref={pickerRef}>
+          <ChromePicker color={localColor} onChange={handleColorChange} />
+        </div>
+      )}
+    </div>
+  );
 };
 
 export default CanvasComponent;

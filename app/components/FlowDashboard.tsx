@@ -5,7 +5,7 @@ import { useAppStore } from "../store/appStore";
 
 const FlowDashboard: React.FC = () => {
   const { flows, setFlows, setActiveFlow } = useFlowStore();
-  const { openApp } = useAppStore();
+  const { openApp, openApps } = useAppStore(); // Add openApps here
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -30,13 +30,17 @@ const FlowDashboard: React.FC = () => {
 
   const handleFlowClick = (flowId: string) => {
     setActiveFlow(flowId);
-    openApp({
-      id: "flow",
-      name: "Flow",
-      icon: "flow-icon",
-      dockPosition: 1,
-      animationType: "magnify",
-    });
+
+    // Only open the app if it's not already open
+    if (!openApps.some((app) => app.id === "flow")) {
+      openApp({
+        id: "flow",
+        name: "Flow",
+        icon: "flow-icon",
+        dockPosition: 1,
+        animationType: "magnify",
+      });
+    }
   };
 
   return (

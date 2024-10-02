@@ -79,14 +79,14 @@ model Flow {
 
 // New model for FlowComponent
 model FlowComponent {
-  id        String   @id @default(cuid())
-  name      String
-  type      String // e.g., "color", "typography"
-  value     String?
-  opacity   Int?
+  id         String   @id @default(cuid())
+  name       String
+  type       String // e.g., "color", "typography"
+  value      String?
+  opacity    Int?
   fontFamily String?
-  flowId    String
-  flow      Flow     @relation(fields: [flowId], references: [id])
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  flowId     String
+  flow       Flow     @relation(fields: [flowId], references: [id])
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 }
