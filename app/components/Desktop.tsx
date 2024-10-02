@@ -12,7 +12,7 @@ const Desktop: React.FC = () => {
   const { getColor, getFont, isLoading } = useStyles();
 
   if (isLoading) {
-    return <div>Loading...</div>; // Or any loading indicator
+    return <div>Loading...</div>;
   }
 
   return (

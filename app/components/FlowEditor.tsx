@@ -1,58 +1,83 @@
-// app/components/FlowEditor.tsx
 import React, { useEffect, useState } from "react";
 import { useFlowStore } from "../store/flowStore";
+import { useDesignSystem } from "../contexts/DesignSystemContext";
 import { useStyles } from "../hooks/useStyles";
 import { debounce } from "lodash";
 
 const FlowEditor: React.FC = () => {
   const { activeFlowId, flows } = useFlowStore();
+  const { designSystem, isLoading: isDesignSystemLoading } = useDesignSystem();
   const { getColor, getFont, updateColor, updateFont } = useStyles();
   const [canvasComponents, setCanvasComponents] = useState<any[]>([]);
 
   useEffect(() => {
-    if (activeFlowId) {
+    if (activeFlowId && !isDesignSystemLoading) {
       const activeFlow = flows.find((flow) => flow.id === activeFlowId);
-      if (activeFlow) {
-        // Load components from the active flow
-        setCanvasComponents(activeFlow.components);
+      if (activeFlow && designSystem) {
+        const designSystemComponents = [
+          ...designSystem.colorTokens.map((token) => ({
+            id: token.id,
+            type: "color",
+            name: token.name,
+            value: token.value,
+            opacity: token.opacity,
+          })),
+          ...designSystem.typographyTokens.map((token) => ({
+            id: token.id,
+            type: "typography",
+            name: token.name,
+            fontFamily: token.fontFamily,
+            fontSize: token.fontSize,
+            fontWeight: token.fontWeight,
+            lineHeight: token.lineHeight,
+            letterSpacing: token.letterSpacing,
+          })),
+        ];
+        setCanvasComponents([
+          ...activeFlow.components,
+          ...designSystemComponents,
+        ]);
       }
     }
-  }, [activeFlowId, flows]);
+  }, [activeFlowId, flows, designSystem, isDesignSystemLoading]);
 
   const handleComponentUpdate = debounce(
     (componentId: string, updates: any) => {
-      // Update the component in the canvas
       setCanvasComponents((prevComponents) =>
         prevComponents.map((comp) =>
           comp.id === componentId ? { ...comp, ...updates } : comp
         )
       );
 
-      // Update the design system
       if (updates.type === "color") {
         updateColor(updates.name, updates.value, updates.opacity);
       } else if (updates.type === "typography") {
         updateFont(updates.name, updates.value);
       }
 
-      // Here you would also update the flow in the database
-      // This is left as a TODO for brevity
+      // TODO: Update the flow in the database
     },
     300
   );
+
+  if (isDesignSystemLoading) {
+    return <div>Loading...</div>;
+  }
 
   return (
     <div className="w-full h-full bg-gray-100 overflow-auto">
       <div className="p-4">
         <h2 className="text-2xl font-bold mb-4">Flow Editor</h2>
-        <div className="canvas bg-white border border-gray-300 p-4 min-h-screen">
+        <div className="canvas bg-white border border-gray-300 p-4 min-h-screen grid grid-cols-4 gap-4">
           {canvasComponents.map((component) => (
             <CanvasComponent
               key={component.id}
               component={component}
-              onUpdate={handleComponentUpdate}
               getColor={getColor}
               getFont={getFont}
+              onUpdate={(updatedComponent) =>
+                handleComponentUpdate(component.id, updatedComponent)
+              }
             />
           ))}
         </div>
@@ -63,7 +88,7 @@ const FlowEditor: React.FC = () => {
 
 interface CanvasComponentProps {
   component: any;
-  onUpdate: (id: string, updates: any) => void;
+  onUpdate: (updates: any) => void;
   getColor: (name: string) => string;
   getFont: (name: string) => string;
 }
@@ -75,7 +100,7 @@ const CanvasComponent: React.FC<CanvasComponentProps> = ({
   getFont,
 }) => {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    onUpdate(component.id, { [e.target.name]: e.target.value });
+    onUpdate({ [e.target.name]: e.target.value });
   };
 
   if (component.type === "color") {
@@ -87,8 +112,17 @@ const CanvasComponent: React.FC<CanvasComponentProps> = ({
         <input
           type="color"
           name="value"
-          value={getColor(component.name)}
+          value={component.value}
           onChange={handleChange}
+          className="mt-1 block w-full"
+        />
+        <input
+          type="number"
+          name="opacity"
+          value={component.opacity}
+          onChange={handleChange}
+          min="0"
+          max="100"
           className="mt-1 block w-full"
         />
       </div>
@@ -101,10 +135,10 @@ const CanvasComponent: React.FC<CanvasComponentProps> = ({
         </label>
         <input
           type="text"
-          name="value"
-          value={getFont(component.name)}
+          name="fontFamily"
+          value={component.fontFamily}
           onChange={handleChange}
-          className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
+          className="mt-1 block w-full"
         />
       </div>
     );
