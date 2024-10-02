@@ -2,12 +2,14 @@
 import { useDesignSystem } from "../contexts/DesignSystemContext";
 
 export const useStyles = () => {
-  const { designSystem, isLoading } = useDesignSystem();
+  const { designSystem, isLoading, updateDesignSystem } = useDesignSystem();
 
   if (isLoading) {
     return {
       getColor: () => "",
       getFont: () => "",
+      updateColor: async () => {},
+      updateFont: async () => {},
       isLoading,
     };
   }
@@ -17,6 +19,8 @@ export const useStyles = () => {
     return {
       getColor: () => "",
       getFont: () => "",
+      updateColor: async () => {},
+      updateFont: async () => {},
       isLoading,
     };
   }
@@ -33,6 +37,28 @@ export const useStyles = () => {
     return token?.fontFamily || "";
   };
 
+  const updateColor = async (name: string, value: string, opacity: number) => {
+    if (!designSystem) return;
+    const updatedTokens = designSystem.colorTokens.map((token) =>
+      token.name === name ? { ...token, value, opacity } : token
+    );
+    await updateDesignSystem({
+      ...designSystem,
+      colorTokens: updatedTokens,
+    });
+  };
+
+  const updateFont = async (name: string, fontFamily: string) => {
+    if (!designSystem) return;
+    const updatedTokens = designSystem.typographyTokens.map((token) =>
+      token.name === name ? { ...token, fontFamily } : token
+    );
+    await updateDesignSystem({
+      ...designSystem,
+      typographyTokens: updatedTokens,
+    });
+  };
+
   const hexToRgb = (hex: string) => {
     const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
     return result
@@ -43,5 +69,5 @@ export const useStyles = () => {
       : null;
   };
 
-  return { getColor, getFont, isLoading };
+  return { getColor, getFont, updateColor, updateFont, isLoading };
 };

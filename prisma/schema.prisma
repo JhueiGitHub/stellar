@@ -17,6 +17,7 @@ model Profile {
   updatedAt DateTime @updatedAt
 
   designSystem DesignSystem?
+  flows        Flow[] // New relation to Flow model
 }
 
 model DesignSystem {
@@ -29,6 +30,9 @@ model DesignSystem {
 
   colorTokens      ColorToken[]
   typographyTokens TypographyToken[]
+  flows            Flow[] // New relation to Flow model
+
+  @@index([profileId])
 }
 
 model ColorToken {
@@ -54,4 +58,33 @@ model TypographyToken {
   designSystem   DesignSystem @relation(fields: [designSystemId], references: [id])
   createdAt      DateTime     @default(now())
   updatedAt      DateTime     @updatedAt
+}
+
+// New model for Flow
+model Flow {
+  id             String          @id @default(cuid())
+  name           String
+  description    String?
+  profileId      String
+  profile        Profile         @relation(fields: [profileId], references: [id])
+  designSystemId String
+  designSystem   DesignSystem    @relation(fields: [designSystemId], references: [id])
+  components     FlowComponent[]
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+
+  @@index([profileId])
+  @@index([designSystemId])
+}
+
+// New model for FlowComponent
+model FlowComponent {
+  id        String   @id @default(cuid())
+  name      String
+  type      String // e.g., "color", "typography"
+  value     String // JSON string containing component data
+  flowId    String
+  flow      Flow     @relation(fields: [flowId], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }

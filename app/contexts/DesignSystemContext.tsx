@@ -14,6 +14,9 @@ interface DesignSystemContextType {
   setDesignSystem: React.Dispatch<
     React.SetStateAction<DesignSystemContextType["designSystem"]>
   >;
+  updateDesignSystem: (
+    updatedSystem: DesignSystemContextType["designSystem"]
+  ) => Promise<void>;
   isLoading: boolean;
 }
 
@@ -29,23 +32,42 @@ export const DesignSystemProvider: React.FC<{ children: React.ReactNode }> = ({
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const fetchDesignSystem = async () => {
-      try {
-        const response = await fetch("/api/design-system");
-        const data = await response.json();
-        setDesignSystem(data);
-      } catch (error) {
-        console.error("Failed to fetch design system:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
     fetchDesignSystem();
   }, []);
 
+  const fetchDesignSystem = async () => {
+    try {
+      const response = await fetch("/api/design-system");
+      const data = await response.json();
+      setDesignSystem(data);
+    } catch (error) {
+      console.error("Failed to fetch design system:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const updateDesignSystem = async (
+    updatedSystem: DesignSystemContextType["designSystem"]
+  ) => {
+    if (!updatedSystem) return;
+    setDesignSystem(updatedSystem);
+    try {
+      await fetch("/api/design-system", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(updatedSystem),
+      });
+    } catch (error) {
+      console.error("Failed to update design system:", error);
+      // Optionally, revert the local state if the update fails
+      await fetchDesignSystem();
+    }
+  };
+
   return (
     <DesignSystemContext.Provider
-      value={{ designSystem, setDesignSystem, isLoading }}
+      value={{ designSystem, setDesignSystem, updateDesignSystem, isLoading }}
     >
       {children}
     </DesignSystemContext.Provider>
