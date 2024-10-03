@@ -1,23 +1,24 @@
-import React, { useState, useRef, useEffect } from "react";
+import { debounce } from "lodash";
+import React, { useState, useCallback, useRef, useEffect } from "react";
 import { ChromePicker, ColorResult } from "react-color";
 
 interface CanvasComponentProps {
-  component: {
-    id: string;
-    type: "color" | "typography";
-    name: string;
-    value: string;
-    opacity?: number;
-  };
-  onUpdate: (componentId: string, updates: any) => void;
+  component: any;
+  onUpdate: (updates: any) => void;
+  getColor: (name: string) => string;
+  getFont: (name: string) => string;
 }
 
 const CanvasComponent: React.FC<CanvasComponentProps> = ({
   component,
   onUpdate,
+  getColor,
+  getFont,
 }) => {
   const [showPicker, setShowPicker] = useState(false);
   const [localColor, setLocalColor] = useState(component.value);
+  const [localOpacity, setLocalOpacity] = useState(component.opacity);
+  const debouncedUpdate = useRef(debounce(onUpdate, 1000)).current;
   const pickerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {

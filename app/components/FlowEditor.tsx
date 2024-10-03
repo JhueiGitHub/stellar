@@ -68,7 +68,7 @@ const FlowEditor: React.FC = () => {
         } catch (error) {
           console.error("Failed to update design system:", error);
         }
-      }, 500),
+      }, 1000),
     [designSystem, updateDesignSystem]
   );
 
@@ -155,14 +155,11 @@ function CanvasComponent({
     [onUpdate]
   );
 
-  const togglePicker = useCallback(
-    (e: React.MouseEvent) => {
-      e.preventDefault();
-      e.stopPropagation();
-      setShowPicker((prev) => !prev);
-    },
-    []
-  );
+  const togglePicker = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setShowPicker((prev) => !prev);
+  }, []);
 
   if (component.type === "color") {
     return (
