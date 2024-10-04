@@ -14,9 +14,9 @@ export async function GET(
 
     const { finderId } = params;
 
-    // If finderId is "root", fetch the root folder
+    let folder;
     if (finderId === "root") {
-      const rootFolder = await db.folder.findFirst({
+      folder = await db.folder.findFirst({
         where: {
           profileId: profile.id,
           isRoot: true,
@@ -26,25 +26,18 @@ export async function GET(
           files: true,
         },
       });
-
-      if (!rootFolder) {
-        return new NextResponse("Root folder not found", { status: 404 });
-      }
-
-      return NextResponse.json(rootFolder);
+    } else {
+      folder = await db.folder.findUnique({
+        where: {
+          id: finderId,
+          profileId: profile.id,
+        },
+        include: {
+          subfolders: true,
+          files: true,
+        },
+      });
     }
-
-    // Otherwise, fetch the specified folder
-    const folder = await db.folder.findUnique({
-      where: {
-        id: finderId,
-        profileId: profile.id,
-      },
-      include: {
-        subfolders: true,
-        files: true,
-      },
-    });
 
     if (!folder) {
       return new NextResponse("Folder not found", { status: 404 });

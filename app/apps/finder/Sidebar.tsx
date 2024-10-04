@@ -7,10 +7,17 @@ import { FinderContextMenu } from "./components/FinderContextMenu";
 
 const Sidebar: React.FC = () => {
   const { getColor, getFont } = useStyles();
-  const { sidebarItems, fetchItems, toggleFolder, createItem } =
-    useFinderStore();
+  const {
+    sidebarItems,
+    fetchItems,
+    toggleFolder,
+    createItem,
+    renameItem,
+    deleteItem,
+  } = useFinderStore();
   const { updateAppState } = useAppStore();
 
+  // Fetch root items on component mount
   useEffect(() => {
     fetchItems();
   }, [fetchItems]);
@@ -32,7 +39,6 @@ const Sidebar: React.FC = () => {
       try {
         await createItem(itemName, type, parentId);
         updateAppState("finder", { lastModified: Date.now() });
-        fetchItems(); // Refresh the sidebar items
       } catch (error) {
         console.error(`Error creating ${type}:`, error);
         alert(`Failed to create ${type}. Please try again.`);
@@ -40,42 +46,70 @@ const Sidebar: React.FC = () => {
     }
   };
 
-  const renderFolder = (item: any) => (
+  const handleRenameItem = async (id: string, type: "folder" | "file") => {
+    const newName = prompt(`Enter new name for ${type}:`);
+    if (newName) {
+      try {
+        await renameItem(id, newName, type);
+        updateAppState("finder", { lastModified: Date.now() });
+      } catch (error) {
+        console.error(`Error renaming ${type}:`, error);
+        alert(`Failed to rename ${type}. Please try again.`);
+      }
+    }
+  };
+
+  const handleDeleteItem = async (id: string, type: "folder" | "file") => {
+    const confirmDelete = window.confirm(
+      `Are you sure you want to delete this ${type}?`
+    );
+    if (confirmDelete) {
+      try {
+        await deleteItem(id, type);
+        updateAppState("finder", { lastModified: Date.now() });
+      } catch (error) {
+        console.error(`Error deleting ${type}:`, error);
+        alert(`Failed to delete ${type}. Please try again.`);
+      }
+    }
+  };
+
+  const renderItem = (item: any) => (
     <FinderContextMenu
       key={item.id}
       onCreateFolder={() => handleCreateItem("folder", item.id)}
       onCreateFile={() => handleCreateItem("file", item.id)}
+      onRename={() => handleRenameItem(item.id, item.type)}
+      onDelete={() => handleDeleteItem(item.id, item.type)}
     >
-      <Folder
-        element={item.name}
-        value={item.id}
-        openIcon={
-          <img
-            src="/icns/_folder_open.svg"
-            alt="Open Folder"
-            className="w-4 h-4"
-          />
-        }
-        closeIcon={
-          <img
-            src="/icns/_folder.svg"
-            alt="Closed Folder"
-            className="w-4 h-4"
-          />
-        }
-        onToggle={() => handleFolderToggle(item.id)}
-      >
-        {item.children?.map((child: any) =>
-          child.type === "folder" ? renderFolder(child) : renderFile(child)
-        )}
-      </Folder>
+      {item.type === "folder" ? (
+        <Folder
+          element={item.name}
+          value={item.id}
+          openIcon={
+            <img
+              src="/icns/_folder_open.svg"
+              alt="Open Folder"
+              className="w-4 h-4"
+            />
+          }
+          closeIcon={
+            <img
+              src="/icns/_folder.svg"
+              alt="Closed Folder"
+              className="w-4 h-4"
+            />
+          }
+          onToggle={() => handleFolderToggle(item.id)}
+        >
+          {item.children?.map((child: any) => renderItem(child))}
+        </Folder>
+      ) : (
+        <File key={item.id} value={item.id}>
+          <p>{item.name}</p>
+        </File>
+      )}
     </FinderContextMenu>
-  );
-
-  const renderFile = (item: any) => (
-    <File key={item.id} value={item.id}>
-      <p>{item.name}</p>
-    </File>
   );
 
   return (
@@ -96,9 +130,7 @@ const Sidebar: React.FC = () => {
           initialExpandedItems={["1", "4"]}
           elements={sidebarItems}
         >
-          {sidebarItems.map((item) =>
-            item.type === "folder" ? renderFolder(item) : renderFile(item)
-          )}
+          {sidebarItems.map(renderItem)}
         </Tree>
       </div>
     </FinderContextMenu>

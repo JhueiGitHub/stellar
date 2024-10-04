@@ -17,7 +17,7 @@ export async function POST(req: Request) {
           name,
           profileId: profile.id,
           parentId: parentId || null,
-          isRoot: !parentId,
+          isRoot: parentId ? false : true,
         },
         include: {
           subfolders: true,

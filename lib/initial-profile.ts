@@ -89,12 +89,6 @@ export const initialProfile = async () => {
       },
     });
 
-    // Update profile with the root folder
-    await prisma.profile.update({
-      where: { id: profile.id },
-      data: { rootFolderId: rootFolder.id }, // Changed from rootProfileId to rootFolderId
-    });
-
     return profile;
   });
 
