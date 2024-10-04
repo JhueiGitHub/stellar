@@ -9,26 +9,44 @@ export async function POST(req: Request) {
       return new NextResponse("Unauthorized", { status: 401 });
     }
 
-    const { name, type, parentId, content, size } = await req.json();
+    const { name, type, parentId } = await req.json();
 
     if (type === "folder") {
       const newFolder = await db.folder.create({
         data: {
           name,
           profileId: profile.id,
-          parentId,
+          parentId: parentId || null,
+          isRoot: !parentId,
+        },
+        include: {
+          subfolders: true,
+          files: true,
         },
       });
       return NextResponse.json(newFolder);
     } else if (type === "file") {
+      let folder;
+      if (parentId) {
+        folder = await db.folder.findUnique({ where: { id: parentId } });
+      } else {
+        folder = await db.folder.findFirst({
+          where: { profileId: profile.id, isRoot: true },
+        });
+      }
+
+      if (!folder) {
+        return new NextResponse("Folder not found", { status: 404 });
+      }
+
       const newFile = await db.file.create({
         data: {
           name,
-          type,
-          size,
-          content,
-          folderId: parentId,
+          type: "text/plain", // Default type, adjust as needed
+          size: 0,
+          content: "",
           profileId: profile.id,
+          folderId: folder.id,
         },
       });
       return NextResponse.json(newFile);
@@ -37,6 +55,6 @@ export async function POST(req: Request) {
     }
   } catch (error) {
     console.error("[FINDER_POST]", error);
-    return new NextResponse("Internal Error", { status: 500 });
+    return new NextResponse("Internal Server Error", { status: 500 });
   }
 }
