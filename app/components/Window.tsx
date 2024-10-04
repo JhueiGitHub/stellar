@@ -1,29 +1,72 @@
-"use client";
-
-import { useState } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { motion } from "framer-motion";
 import dynamic from "next/dynamic";
 import { AppDefinition } from "../types/AppTypes";
 import { useAppStore } from "../store/appStore";
 import { useStyles } from "../hooks/useStyles";
+import { useDebounceCallback } from "../hooks/useDebounce";
+import SaveIndicator from "./SaveIndicator";
 
 interface WindowProps {
   app: AppDefinition;
   isActive: boolean;
 }
 
+// Define a type for the dynamically loaded component props
+interface DynamicAppProps {
+  onStateChange: (newState: Record<string, any>) => void;
+}
+
 const Window: React.FC<WindowProps> = ({ app, isActive }) => {
-  const { closeApp, setActiveApp } = useAppStore();
+  const { closeApp, setActiveApp, updateAppState } = useAppStore();
   const [isMinimized, setIsMinimized] = useState(false);
   const { getColor } = useStyles();
+  const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved">(
+    "idle"
+  );
 
-  const AppComponent = dynamic(() => import(`../apps/${app.id}/App`), {
-    loading: () => <p>Loading...</p>,
-  });
+  // Update the dynamic import to use the DynamicAppProps
+  const AppComponent = dynamic<DynamicAppProps>(
+    () => import(`../apps/${app.id}/App`),
+    {
+      loading: () => <p>Loading...</p>,
+    }
+  );
 
   const handleClose = () => closeApp(app.id);
   const handleMinimize = () => setIsMinimized(true);
   const handleMaximize = () => setIsMinimized(false);
+
+  const [debouncedSave, cancelDebounce] = useDebounceCallback(() => {
+    setSaveStatus("saving");
+    setTimeout(() => {
+      setSaveStatus("saved");
+      setTimeout(() => setSaveStatus("idle"), 1000);
+    }, 500);
+  }, 3000);
+
+  const handleContentChange = useCallback(() => {
+    setSaveStatus("saving");
+    debouncedSave();
+  }, [debouncedSave]);
+
+  useEffect(() => {
+    const checkStateChanges = (
+      state: ReturnType<typeof useAppStore.getState>
+    ) => {
+      const appState = state.openApps.find(
+        (openApp) => openApp.id === app.id
+      )?.state;
+      if (appState) {
+        handleContentChange();
+      }
+    };
+
+    const unsubscribe = useAppStore.subscribe(checkStateChanges);
+    return () => {
+      unsubscribe();
+    };
+  }, [app.id, handleContentChange]);
 
   return (
     <motion.div
@@ -32,15 +75,15 @@ const Window: React.FC<WindowProps> = ({ app, isActive }) => {
       transition={{ type: "spring", stiffness: 300, damping: 20 }}
       style={{
         zIndex: isActive ? 10 : 1,
-        backgroundColor: getColor("Overlaying BG"), // Main window fill
-        border: `1px solid ${getColor("Brd")}`, // Border color
+        backgroundColor: getColor("Overlaying BG"),
+        border: `1px solid ${getColor("Brd")}`,
       }}
       className="absolute top-10 left-10 w-3/4 h-3/4 rounded-lg shadow-lg overflow-hidden"
-      onClick={() => setActiveApp(app.id)}
     >
       <div
         className="p-2 flex justify-between items-center"
-        style={{ backgroundColor: getColor("Underlying BG") }} // Top bar fill
+        style={{ backgroundColor: getColor("Underlying BG") }}
+        onClick={() => setActiveApp(app.id)}
       >
         <div className="flex space-x-2">
           <button
@@ -62,9 +105,14 @@ const Window: React.FC<WindowProps> = ({ app, isActive }) => {
         >
           {app.name}
         </h2>
+        <SaveIndicator status={saveStatus} />
       </div>
       <div className="p-4 h-full overflow-auto">
-        <AppComponent />
+        <AppComponent
+          onStateChange={(newState: Record<string, any>) =>
+            updateAppState(app.id, newState)
+          }
+        />
       </div>
     </motion.div>
   );

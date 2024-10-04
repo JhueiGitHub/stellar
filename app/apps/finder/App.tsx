@@ -1,11 +1,12 @@
-"use client";
+import React from "react";
+import FinderContent from "./FinderContent";
 
-const Home = () => {
+const FinderApp: React.FC = () => {
   return (
-    <main className="h-screen overflow-hidden">
-      <div></div>
-    </main>
+    <div className="h-full w-full">
+      <FinderContent />
+    </div>
   );
 };
 
-export default Home;
+export default FinderApp;

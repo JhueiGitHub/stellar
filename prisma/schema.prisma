@@ -17,7 +17,11 @@ model Profile {
   updatedAt DateTime @updatedAt
 
   designSystem DesignSystem?
-  flows        Flow[] // New relation to Flow model
+  flows        Flow[]
+  rootFolder   Folder?       @relation("ProfileRootFolder")
+  rootFolderId String?       @unique
+  folders      Folder[]
+  files        File[]
 }
 
 model DesignSystem {
@@ -30,7 +34,7 @@ model DesignSystem {
 
   colorTokens      ColorToken[]
   typographyTokens TypographyToken[]
-  flows            Flow[] // New relation to Flow model
+  flows            Flow[]
 
   @@index([profileId])
 }
@@ -44,6 +48,8 @@ model ColorToken {
   designSystem   DesignSystem @relation(fields: [designSystemId], references: [id])
   createdAt      DateTime     @default(now())
   updatedAt      DateTime     @updatedAt
+
+  @@index([designSystemId])
 }
 
 model TypographyToken {
@@ -58,9 +64,10 @@ model TypographyToken {
   designSystem   DesignSystem @relation(fields: [designSystemId], references: [id])
   createdAt      DateTime     @default(now())
   updatedAt      DateTime     @updatedAt
+
+  @@index([designSystemId])
 }
 
-// New model for Flow
 model Flow {
   id             String          @id @default(cuid())
   name           String
@@ -77,11 +84,10 @@ model Flow {
   @@index([designSystemId])
 }
 
-// New model for FlowComponent
 model FlowComponent {
   id         String   @id @default(cuid())
   name       String
-  type       String // e.g., "color", "typography"
+  type       String
   value      String?
   opacity    Int?
   fontFamily String?
@@ -89,4 +95,42 @@ model FlowComponent {
   flow       Flow     @relation(fields: [flowId], references: [id])
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
+
+  @@index([flowId])
+}
+
+model Folder {
+  id            String   @id @default(cuid())
+  name          String
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  profileId     String
+  profile       Profile  @relation(fields: [profileId], references: [id])
+  parentId      String?
+  parent        Folder?  @relation("FolderToFolder", fields: [parentId], references: [id])
+  subfolders    Folder[] @relation("FolderToFolder")
+  files         File[] // Explicitly define the files relation
+  isRoot        Boolean  @default(false)
+  rootProfile   Profile? @relation("ProfileRootFolder", fields: [rootProfileId], references: [id])
+  rootProfileId String?  @unique
+
+  @@index([profileId])
+  @@index([parentId])
+}
+
+model File {
+  id        String   @id @default(cuid())
+  name      String
+  type      String
+  size      Int
+  content   String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  folderId  String
+  folder    Folder   @relation(fields: [folderId], references: [id])
+  profileId String
+  profile   Profile  @relation(fields: [profileId], references: [id])
+
+  @@index([folderId])
+  @@index([profileId])
 }

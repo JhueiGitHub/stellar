@@ -1,11 +1,11 @@
-import { currentUser } from "@clerk/nextjs";
+import { currentUser, redirectToSignIn } from "@clerk/nextjs";
 import { db } from "@/lib/db";
 
 export const initialProfile = async () => {
   const user = await currentUser();
 
   if (!user) {
-    return null;
+    return redirectToSignIn();
   }
 
   const profile = await db.profile.findUnique({
@@ -66,6 +66,33 @@ export const initialProfile = async () => {
         profileId: profile.id,
         designSystemId: zenithDesignSystem.id,
       },
+    });
+
+    // Create root folder for the user
+    const rootFolder = await prisma.folder.create({
+      data: {
+        name: "Root",
+        isRoot: true,
+        profileId: profile.id,
+      },
+    });
+
+    // Create initial welcome file in the root folder
+    await prisma.file.create({
+      data: {
+        name: "Welcome.txt",
+        type: "text/plain",
+        size: 23, // Size of the content in bytes
+        content: "Welcome to StellarOS!",
+        folderId: rootFolder.id,
+        profileId: profile.id,
+      },
+    });
+
+    // Update profile with the root folder
+    await prisma.profile.update({
+      where: { id: profile.id },
+      data: { rootFolderId: rootFolder.id }, // Changed from rootProfileId to rootFolderId
     });
 
     return profile;
