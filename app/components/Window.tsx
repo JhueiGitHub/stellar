@@ -13,9 +13,7 @@ interface WindowProps {
 }
 
 // Define a type for the dynamically loaded component props
-interface DynamicAppProps {
-  onStateChange: (newState: Record<string, any>) => void;
-}
+interface DynamicAppProps {}
 
 const Window: React.FC<WindowProps> = ({ app, isActive }) => {
   const { closeApp, setActiveApp, updateAppState } = useAppStore();
@@ -27,7 +25,7 @@ const Window: React.FC<WindowProps> = ({ app, isActive }) => {
 
   // Update the dynamic import to use the DynamicAppProps
   const AppComponent = dynamic<DynamicAppProps>(
-    () => import(`../apps/${app.id}/App`),
+    () => import(`../apps/${app.id}/page`),
     {
       loading: () => <p>Loading...</p>,
     }
@@ -75,14 +73,14 @@ const Window: React.FC<WindowProps> = ({ app, isActive }) => {
       transition={{ type: "spring", stiffness: 300, damping: 20 }}
       style={{
         zIndex: isActive ? 10 : 1,
-        backgroundColor: getColor("Overlaying BG"),
+        backgroundColor: getColor("Glass"),
         border: `1px solid ${getColor("Brd")}`,
       }}
       className="absolute top-10 left-10 w-3/4 h-3/4 rounded-lg shadow-lg overflow-hidden"
     >
       <div
         className="p-2 flex justify-between items-center"
-        style={{ backgroundColor: getColor("Underlying BG") }}
+        style={{ backgroundColor: getColor("Glass") }}
         onClick={() => setActiveApp(app.id)}
       >
         <div className="flex space-x-2">
@@ -107,12 +105,8 @@ const Window: React.FC<WindowProps> = ({ app, isActive }) => {
         </h2>
         <SaveIndicator status={saveStatus} />
       </div>
-      <div className="p-4 h-full overflow-auto">
-        <AppComponent
-          onStateChange={(newState: Record<string, any>) =>
-            updateAppState(app.id, newState)
-          }
-        />
+      <div className="h-full overflow-auto">
+        <AppComponent />
       </div>
     </motion.div>
   );
