@@ -28,7 +28,7 @@ const Finder: React.FC = () => {
   } = useFileSystem();
 
   return (
-    <div className="h-full w-full">
+    <div className="relative h-full w-full overflow-hidden">
       <FileExplorer
         currentFolder={currentFolder}
         folderContents={folderContents}

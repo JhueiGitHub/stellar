@@ -7,8 +7,8 @@ import dynamic from "next/dynamic";
  *
  * we're doing this because we're using a canvas element that can't be pre-rendered by Next.js on the server
  */
-const Page = dynamic(() => import("./App"), { ssr: false });
+const SetupPage = dynamic(() => import("./App"), { ssr: false });
 
-export default function FinderPage() {
-  return <Page />;
+export default function DiscordPage() {
+  return <SetupPage />;
 }

@@ -1,4 +1,5 @@
-import "./globals.css";
+import { ModalProvider } from "@dis/components/providers/modal-provider";
+import "@dis/globals.css";
 
 export const metadata = {
   title: "Figma Clone",
@@ -8,7 +9,11 @@ export const metadata = {
 
 const RootLayout = ({ children }: { children: React.ReactNode }) => (
   <html lang="en">
-    <body className="h-full w-full overflow-hidden">{children}</body>
+    <body
+      className={`$className} bg-primary-grey-200 h-full w-full overflow-hidden`}
+    >
+      {children}
+    </body>
   </html>
 );
 

@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { currentProfile } from "@/lib/current-profile";
 
+export const dynamic = "force-dynamic";
+
 export async function GET() {
   try {
     const profile = await currentProfile();
@@ -11,7 +13,7 @@ export async function GET() {
 
     return NextResponse.json(profile);
   } catch (error) {
-    console.log("[PROFILE_GET]", error);
+    console.error("[PROFILE_GET]", error);
     return new NextResponse("Internal Error", { status: 500 });
   }
 }

@@ -182,11 +182,11 @@ const Finder: React.FC<ReturnType<typeof useFileSystem>> = ({
   return (
     <div
       ref={explorerRef}
-      className="h-full w-full bg-black bg-opacity-10 text-white"
+      className="relative h-full w-full overflow-hidden bg-black bg-opacity-10 text-white"
       onContextMenu={handleContextMenu}
       onClick={closeContextMenu}
     >
-      <div className="flex h-full overflow-hidden">
+      <div className="relativeflex h-full overflow-hidden">
         <div className="absolute inset-0">
           <div
             className="absolute flex items-center p-4"

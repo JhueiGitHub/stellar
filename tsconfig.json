@@ -12,6 +12,7 @@
     "isolatedModules": true,
     "jsx": "preserve",
     "incremental": true,
+    "forceConsistentCasingInFileNames": true,
     "plugins": [
       {
         "name": "next"
@@ -21,9 +22,21 @@
       "@/*": ["./*"],
       "@os/*": ["./app/*"],
       "@f/*": ["./app/apps/finder/*"],
-      "@fc/*": ["./app/apps/finder/components/*"]
-    }
+      "@fc/*": ["./app/apps/finder/components/*"],
+      "@dis/*": ["./app/apps/discord/*"],
+      "@disc/*": ["./app/apps/discord/components/*"],
+      "@fig/*": ["./app/apps/figmaclone/*"]
+    },
+    "target": "es2018",
+    "typeRoots": ["apps/figma/types"]
   },
-  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
+  "include": [
+    "next-env.d.ts",
+    "**/*.ts",
+    "**/*.tsx",
+    ".next/types/**/*.ts",
+    ".next/types/**/*.tsx",
+    "apps/figma/types/**/*.d.ts"
+  ],
   "exclude": ["node_modules"]
 }

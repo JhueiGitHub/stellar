@@ -1,14 +1,9 @@
-import React from "react";
+import "./globals.css";
 
-export const metadata = {
-  title: "Finder",
-  description: "Finder text editor application",
-};
+const RootLayout = ({ children }: { children: React.ReactNode }) => (
+  <html lang="en">
+    <body className="h-full w-full overflow-hidden">{children}</body>
+  </html>
+);
 
-export default function FinderLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
-  return <>{children}</>;
-}
+export default RootLayout;
