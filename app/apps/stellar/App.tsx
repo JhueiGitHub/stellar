@@ -1,11 +1,15 @@
-"use client";
+import React from "react";
+import Finder from "./Finder";
+import { useFileSystem } from "./hooks/useFileSystem";
 
-const Home = () => {
+const App: React.FC = () => {
+  const fileSystemProps = useFileSystem();
+
   return (
-    <main className="h-screen overflow-hidden">
-      <div></div>
-    </main>
+    <div className="h-full w-full">
+      <Finder {...fileSystemProps} />
+    </div>
   );
 };
 
-export default Home;
+export default App;

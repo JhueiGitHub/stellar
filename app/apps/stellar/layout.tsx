@@ -1,15 +1,14 @@
-import "./globals.css";
+import React from "react";
 
 export const metadata = {
-  title: "Figma Clone",
-  description:
-    "A minimalist Figma clone using fabric.js and Liveblocks for realtime collaboration",
+  title: "Finder",
+  description: "Finder text editor application",
 };
 
-const RootLayout = ({ children }: { children: React.ReactNode }) => (
-  <html lang="en">
-    <body className="h-full w-full overflow-hidden">{children}</body>
-  </html>
-);
-
-export default RootLayout;
+export default function FinderLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  return <>{children}</>;
+}
