@@ -191,7 +191,7 @@ const Finder: React.FC<ReturnType<typeof useFileSystem>> = ({
           <div
             className="absolute flex items-center p-4"
             style={{
-              top: "-9px",
+              top: "-10px",
               left: "72px",
               zIndex: 50,
             }}

@@ -9,7 +9,7 @@ export interface AppDefinition {
 
 export const appDefinitions: AppDefinition[] = [
   {
-    id: "finder",
+    id: "stellar",
     name: "Finder",
     icon: "/media/finder.png",
     dockPosition: 0,
@@ -58,7 +58,7 @@ export const appDefinitions: AppDefinition[] = [
     animationType: "magnify",
   },
   {
-    id: "stellar",
+    id: "finder",
     name: "Float",
     icon: "/media/trash.png",
     dockPosition: 7,
