@@ -12,7 +12,6 @@ interface WindowProps {
   isActive: boolean;
 }
 
-// Define a type for the dynamically loaded component props
 interface DynamicAppProps {}
 
 const Window: React.FC<WindowProps> = ({ app, isActive }) => {
@@ -23,7 +22,6 @@ const Window: React.FC<WindowProps> = ({ app, isActive }) => {
     "idle"
   );
 
-  // Update the dynamic import to use the DynamicAppProps
   const AppComponent = dynamic<DynamicAppProps>(
     () => import(`../apps/${app.id}/page`),
     {
@@ -68,15 +66,19 @@ const Window: React.FC<WindowProps> = ({ app, isActive }) => {
 
   return (
     <motion.div
-      initial={{ scale: 0 }}
-      animate={{ scale: isMinimized ? 0 : 1 }}
-      transition={{ type: "spring", stiffness: 300, damping: 20 }}
+      initial={{ scale: 0, opacity: 0 }}
+      animate={{
+        scale: isMinimized ? 0 : 1,
+        opacity: isMinimized ? 0 : 1,
+        transition: { type: "spring", stiffness: 300, damping: 20 },
+      }}
+      exit={{ scale: 0, opacity: 0 }}
       style={{
         zIndex: isActive ? 10 : 1,
         backgroundColor: getColor("Glass"),
         border: `1px solid ${getColor("Brd")}`,
       }}
-      className="absolute top-10 left-10 w-3/4 h-3/4 rounded-lg shadow-lg overflow-hidden"
+      className="fixed inset-0 w-full h-full flex flex-col rounded-lg shadow-lg overflow-hidden"
     >
       <div
         className="p-2 flex justify-between items-center"
@@ -105,7 +107,7 @@ const Window: React.FC<WindowProps> = ({ app, isActive }) => {
         </h2>
         <SaveIndicator status={saveStatus} />
       </div>
-      <div className="h-full overflow-auto">
+      <div className="flex-grow overflow-auto">
         <AppComponent />
       </div>
     </motion.div>
