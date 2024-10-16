@@ -1,24 +1,19 @@
-// app/apps/flow/App.tsx
-import React, { useState, useEffect } from "react";
+import React from "react";
 import { useFlowStore } from "../../store/flowStore";
 import FlowDashboard from "../../components/FlowDashboard";
 import FlowEditor from "../../components/FlowEditor";
+import { useStyles } from "../../hooks/useStyles";
 
 const FlowApp: React.FC = () => {
   const { activeFlowId } = useFlowStore();
-  const [isEditing, setIsEditing] = useState(false);
-
-  useEffect(() => {
-    if (activeFlowId && !isEditing) {
-      setIsEditing(true);
-    } else if (!activeFlowId && isEditing) {
-      setIsEditing(false);
-    }
-  }, [activeFlowId, isEditing]);
+  const { getColor } = useStyles();
 
   return (
-    <div className="w-full h-full">
-      {isEditing ? <FlowEditor /> : <FlowDashboard />}
+    <div
+      className="w-full h-full"
+      style={{ backgroundColor: getColor("Underlying BG") }}
+    >
+      {activeFlowId ? <FlowEditor /> : <FlowDashboard />}
     </div>
   );
 };

@@ -1,13 +1,14 @@
-// app/components/FlowDashboard.tsx
 import React, { useEffect, useState } from "react";
 import { useFlowStore, fetchFlows } from "../store/flowStore";
 import { useAppStore } from "../store/appStore";
+import { useStyles } from "../hooks/useStyles";
 
 const FlowDashboard: React.FC = () => {
   const { flows, setFlows, setActiveFlow } = useFlowStore();
-  const { openApp, openApps } = useAppStore(); // Add openApps here
+  const { openApp, openApps } = useAppStore();
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const { getColor, getFont } = useStyles();
 
   useEffect(() => {
     const loadFlows = async () => {
@@ -31,7 +32,6 @@ const FlowDashboard: React.FC = () => {
   const handleFlowClick = (flowId: string) => {
     setActiveFlow(flowId);
 
-    // Only open the app if it's not already open
     if (!openApps.some((app) => app.id === "flow")) {
       openApp({
         id: "flow",
@@ -44,33 +44,59 @@ const FlowDashboard: React.FC = () => {
   };
 
   return (
-    <div className="p-4">
-      <h2 className="text-2xl font-bold mb-4">Flow Dashboard</h2>
-
-      {/* Debug Panel */}
-      <div className="bg-gray-100 p-4 mb-4 rounded">
-        <h3 className="font-bold mb-2">Debug Info:</h3>
-        <p>Is Loading: {isLoading ? "Yes" : "No"}</p>
-        <p>Error: {error || "None"}</p>
-        <p>Number of Flows: {flows.length}</p>
-      </div>
+    <div
+      className="p-6 h-full"
+      style={{
+        backgroundColor: getColor("Underlying BG"),
+        color: getColor("Text Primary (Hd)"),
+      }}
+    >
+      <h2
+        className="text-2xl font-bold mb-6"
+        style={{ fontFamily: getFont("Text Primary") }}
+      >
+        Flow Dashboard
+      </h2>
 
       {isLoading ? (
-        <p>Loading flows...</p>
+        <p style={{ fontFamily: getFont("Text Secondary") }}>
+          Loading flows...
+        </p>
       ) : error ? (
-        <p className="text-red-500">{error}</p>
+        <p
+          className="text-red-500"
+          style={{ fontFamily: getFont("Text Secondary") }}
+        >
+          {error}
+        </p>
       ) : flows.length === 0 ? (
-        <p>No flows available. Create a new flow to get started.</p>
+        <p style={{ fontFamily: getFont("Text Secondary") }}>
+          No flows available. Create a new flow to get started.
+        </p>
       ) : (
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-3 gap-6">
           {flows.map((flow) => (
             <div
               key={flow.id}
               className="bg-white p-4 rounded shadow cursor-pointer hover:shadow-lg transition-shadow"
+              style={{
+                backgroundColor: getColor("Overlaying BG"),
+                borderColor: getColor("Brd"),
+              }}
               onClick={() => handleFlowClick(flow.id)}
             >
-              <h3 className="text-lg font-semibold">{flow.name}</h3>
-              <p className="text-sm text-gray-600">{flow.description}</p>
+              <h3
+                className="text-lg font-semibold mb-2"
+                style={{ fontFamily: getFont("Text Primary") }}
+              >
+                {flow.name}
+              </h3>
+              <p
+                className="text-sm opacity-70"
+                style={{ fontFamily: getFont("Text Secondary") }}
+              >
+                {flow.description}
+              </p>
             </div>
           ))}
         </div>
