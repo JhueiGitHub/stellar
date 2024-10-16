@@ -1,16 +1,15 @@
-"use client";
-
-import React, { useState, useRef, useCallback, useEffect } from "react";
+import React, { useCallback, useRef, useState, useEffect } from "react";
 import {
   motion,
-  PanInfo,
   AnimatePresence,
+  PanInfo,
   useDragControls,
 } from "framer-motion";
 import ContextMenu from "./components/ContextMenu";
 import Sidebar from "./Sidebar";
 import { FileSystemItem } from "./types/FileSystem";
 import { useFileSystem } from "./hooks/useFileSystem";
+import { useStyles } from "@os/hooks/useStyles";
 
 const Finder: React.FC<ReturnType<typeof useFileSystem>> = ({
   currentFolder,
@@ -32,6 +31,7 @@ const Finder: React.FC<ReturnType<typeof useFileSystem>> = ({
   removeFromSidebar,
   sidebarItems,
 }) => {
+  const { getColor, getFont } = useStyles();
   const [contextMenu, setContextMenu] = useState<{
     x: number;
     y: number;
@@ -129,12 +129,13 @@ const Finder: React.FC<ReturnType<typeof useFileSystem>> = ({
     return (
       <motion.div
         key={folder.id}
-        className="absolute flex cursor-move flex-col items-center text-red-500 text-[14px]"
+        className="absolute flex cursor-move flex-col items-center"
         style={{
-          fontFamily: "Dank",
+          fontFamily: getFont("Text Secondary"),
+          color: getColor("Text Primary (Hd)"),
+          x: folder.position?.x || 0,
+          y: folder.position?.y || 0,
         }}
-        initial={{ x: folder.position?.x || 0, y: folder.position?.y || 0 }}
-        animate={{ x: folder.position?.x || 0, y: folder.position?.y || 0 }}
         drag
         dragControls={dragControls}
         dragMomentum={false}
@@ -148,9 +149,10 @@ const Finder: React.FC<ReturnType<typeof useFileSystem>> = ({
           <input
             type="text"
             defaultValue={folder.name}
-            className="w-20 bg-transparent text-center text-[#DDE2E2]/60 outline-none"
+            className="w-20 bg-transparent text-center outline-none"
             style={{
-              fontFamily: "Dank",
+              fontFamily: getFont("Text Secondary"),
+              color: getColor("Text Primary (Hd)"),
             }}
             onBlur={(e) => {
               renameFolder(folder.id, e.target.value);
@@ -166,7 +168,8 @@ const Finder: React.FC<ReturnType<typeof useFileSystem>> = ({
           />
         ) : (
           <span
-            className="mt-[3px] text-[15px] text-[#DDE2E2]/75"
+            className="mt-[3px] text-[15px]"
+            style={{ color: getColor("Text Primary (Hd)") }}
             onDoubleClick={(e) => {
               e.stopPropagation();
               setEditingFolder(folder.id);
@@ -182,23 +185,55 @@ const Finder: React.FC<ReturnType<typeof useFileSystem>> = ({
   return (
     <div
       ref={explorerRef}
-      className="relative h-full w-full overflow-hidden bg-black bg-opacity-10 text-white"
+      className="relative h-full w-full overflow-hidden"
+      style={{
+        backgroundColor: getColor("Underlying BG"),
+        color: getColor("Text Primary (Hd)"),
+      }}
       onContextMenu={handleContextMenu}
       onClick={closeContextMenu}
     >
-      <div className="relativeflex h-full overflow-hidden">
-        <div className="absolute inset-0">
-          <div
-            className="absolute flex items-center p-4"
-            style={{
-              top: "-10px",
-              left: "72px",
-              zIndex: 50,
-            }}
-          >
+      <div className="flex h-full">
+        <AnimatePresence>
+          {isSidebarVisible && (
+            <motion.div
+              ref={sidebarRef}
+              initial={{ x: -200 }}
+              animate={{ x: 0 }}
+              exit={{ x: -200 }}
+              transition={{ type: "spring", stiffness: 300, damping: 30 }}
+              className="h-full w-48 z-10"
+              style={{
+                backgroundColor: getColor("Overlaying BG"),
+                borderRight: `1px solid ${getColor("Brd")}`,
+              }}
+              onMouseEnter={() => {
+                setIsSidebarVisible(true);
+                setIsDraggingOverSidebar(true);
+              }}
+              onMouseLeave={() => {
+                if (!draggingFolder) {
+                  setIsSidebarVisible(false);
+                }
+                setIsDraggingOverSidebar(false);
+              }}
+            >
+              <Sidebar
+                sidebarItems={sidebarItems}
+                onNavigate={navigateToFolder}
+                onRemoveFromSidebar={removeFromSidebar}
+                className="h-full"
+              />
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        <div className="flex flex-col flex-grow">
+          <div className="flex items-center p-4">
             <button
               onClick={navigateUp}
-              className="mr-2 text-[#DDE2E2]/30 hover:text-[#DDE2E2]/60"
+              className="mr-2"
+              style={{ color: getColor("Text Secondary (Bd)") }}
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -218,10 +253,13 @@ const Finder: React.FC<ReturnType<typeof useFileSystem>> = ({
             <button
               onClick={navigateForward}
               className={`mr-2 ${
-                canNavigateForward
-                  ? "text-red-400 hover:text-violet-400"
-                  : "cursor-not-allowed text-[#DDE2E2]/30"
+                canNavigateForward ? "" : "cursor-not-allowed opacity-50"
               }`}
+              style={{
+                color: canNavigateForward
+                  ? getColor("Lilac Accent")
+                  : getColor("Text Secondary (Bd)"),
+              }}
               disabled={!canNavigateForward}
             >
               <svg
@@ -240,21 +278,17 @@ const Finder: React.FC<ReturnType<typeof useFileSystem>> = ({
               </svg>
             </button>
             <span
-              className="text-[#DDE2E2]/90 text-[17px]"
+              className="text-[17px]"
               style={{
-                fontFamily: "ExemplarPro",
+                fontFamily: getFont("Text Primary"),
+                color: getColor("Text Primary (Hd)"),
               }}
             >
               {getFolderName(currentFolder)}
             </span>
           </div>
-          <div
-            className="relative h-[calc(100%-4rem)]"
-            style={{
-              top: "45px",
-              zIndex: 30,
-            }}
-          >
+
+          <div className="flex-grow relative overflow-hidden">
             {folderContents.map(renderFolder)}
             {newFolder && (
               <motion.div
@@ -269,9 +303,10 @@ const Finder: React.FC<ReturnType<typeof useFileSystem>> = ({
                 />
                 <input
                   type="text"
-                  className="w-20 bg-transparent text-center text-[#DDE2E2]/60 outline-none"
+                  className="w-20 bg-transparent text-center outline-none"
                   style={{
-                    fontFamily: "Dank",
+                    fontFamily: getFont("Text Secondary"),
+                    color: getColor("Text Primary (Hd)"),
                   }}
                   placeholder=""
                   autoFocus
@@ -286,39 +321,6 @@ const Finder: React.FC<ReturnType<typeof useFileSystem>> = ({
             )}
           </div>
         </div>
-        <AnimatePresence>
-          {isSidebarVisible && (
-            <motion.div
-              ref={sidebarRef}
-              initial={{ x: -200 }}
-              animate={{ x: 0 }}
-              exit={{ x: -200 }}
-              transition={{ type: "spring", stiffness: 300, damping: 30 }}
-              className="absolute bottom-0 left-0 top-0 z-10 w-48 h-[calc(100%-60px)]"
-              style={{
-                top: "37px",
-                zIndex: 50,
-              }}
-              onMouseEnter={() => {
-                setIsSidebarVisible(true);
-                setIsDraggingOverSidebar(true);
-              }}
-              onMouseLeave={() => {
-                if (!draggingFolder) {
-                  setIsSidebarVisible(false);
-                }
-                setIsDraggingOverSidebar(false);
-              }}
-            >
-              <Sidebar
-                sidebarItems={sidebarItems}
-                onNavigate={navigateToFolder}
-                onRemoveFromSidebar={removeFromSidebar}
-                className="h-full border-r border-gray-700 border-opacity-30 bg-black bg-opacity-45"
-              />
-            </motion.div>
-          )}
-        </AnimatePresence>
       </div>
       {contextMenu && (
         <ContextMenu
