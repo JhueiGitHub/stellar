@@ -5,35 +5,56 @@ import { useAppStore } from "../store/appStore";
 import { FloatingDock } from "./ui/floating-dock";
 import { useStyles } from "../hooks/useStyles";
 
-const DOCK_HEIGHT = 70; // Adjust this value based on your dock's height
-const TRIGGER_AREA_HEIGHT = 60; // Height of the area that triggers the dock to appear
-const DOCK_BOTTOM_MARGIN = 9; // Distance from the bottom edge of the screen
+const DOCK_HEIGHT = 70;
+const TRIGGER_AREA_HEIGHT = 60;
+const DOCK_BOTTOM_MARGIN = 9;
 
 const Dock: React.FC = () => {
-  const { openApp } = useAppStore();
+  const appStore = useAppStore();
   const { getColor } = useStyles();
   const [isDockVisible, setIsDockVisible] = useState(false);
 
   const handleAppClick = (app: (typeof appDefinitions)[number]) => {
-    openApp(app);
+    const openApp = appStore.openApps?.find((a) => a.id === app.id);
+    if (openApp) {
+      appStore.toggleAppMinimize?.(app.id);
+    } else {
+      appStore.openApp?.(app);
+    }
   };
 
-  const dockItems = appDefinitions.map((app) => ({
-    title: app.name,
-    icon: (
-      <button
-        onClick={() => handleAppClick(app)}
-        className="focus:outline-none w-12 h-12 flex items-center justify-center"
-        style={{ backgroundColor: getColor("Overlaying BG") }}
-      >
-        <div
-          className="w-8 h-8 rounded-md"
+  const dockItems = appDefinitions.map((app) => {
+    const openApp = appStore.openApps?.find((a) => a.id === app.id);
+    const isOpen = !!openApp;
+    const isMinimized = openApp?.isMinimized || false;
+
+    return {
+      title: app.name,
+      icon: (
+        <button
+          onClick={() => handleAppClick(app)}
+          className="focus:outline-none w-12 h-12 flex items-center justify-center relative"
           style={{ backgroundColor: getColor("Overlaying BG") }}
-        />
-      </button>
-    ),
-    href: "#",
-  }));
+        >
+          <div
+            className="w-8 h-8 rounded-md"
+            style={{ backgroundColor: getColor("Overlaying BG") }}
+          />
+          {isOpen && (
+            <div
+              className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-1 h-1 rounded-full"
+              style={{
+                backgroundColor: isMinimized
+                  ? getColor("Warning")
+                  : getColor("Active"),
+              }}
+            />
+          )}
+        </button>
+      ),
+      href: "#",
+    };
+  });
 
   const handleMouseMove = useCallback((e: MouseEvent) => {
     const { clientY } = e;
@@ -52,13 +73,14 @@ const Dock: React.FC = () => {
 
   return (
     <>
-      {/* Invisible trigger area */}
       <div
         className="fixed bottom-0 left-0 right-0"
-        style={{ height: TRIGGER_AREA_HEIGHT }}
+        style={{ height: TRIGGER_AREA_HEIGHT, zIndex: 9999 }}
       />
-      {/* Grid container for centering */}
-      <div className="fixed inset-x-0 bottom-0 grid place-items-center pointer-events-none">
+      <div
+        className="fixed inset-x-0 bottom-0 grid place-items-center"
+        style={{ zIndex: 10000, pointerEvents: "none" }}
+      >
         <AnimatePresence>
           {isDockVisible && (
             <motion.div
@@ -71,10 +93,11 @@ const Dock: React.FC = () => {
                 damping: 30,
                 mass: 0.8,
               }}
-              className="flex justify-center items-end pointer-events-auto"
+              className="flex justify-center items-end"
               style={{
                 width: "fit-content",
                 marginBottom: `${DOCK_BOTTOM_MARGIN}px`,
+                pointerEvents: "auto",
               }}
             >
               <FloatingDock

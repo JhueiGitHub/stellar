@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import dynamic from "next/dynamic";
 import { AppDefinition } from "../types/AppTypes";
@@ -15,8 +15,7 @@ interface WindowProps {
 interface DynamicAppProps {}
 
 const Window: React.FC<WindowProps> = ({ app, isActive }) => {
-  const { closeApp, setActiveApp, updateAppState } = useAppStore();
-  const [isMinimized, setIsMinimized] = useState(false);
+  const { closeApp, setActiveApp, updateAppState, openApps } = useAppStore();
   const { getColor } = useStyles();
   const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved">(
     "idle"
@@ -29,9 +28,15 @@ const Window: React.FC<WindowProps> = ({ app, isActive }) => {
     }
   );
 
+  const appState = openApps.find((openApp) => openApp.id === app.id);
+  const isMinimized = appState?.isMinimized || false;
+
   const handleClose = () => closeApp(app.id);
-  const handleMinimize = () => setIsMinimized(true);
-  const handleMaximize = () => setIsMinimized(false);
+  const handleMinimize = () => updateAppState(app.id, { isMinimized: true });
+  const handleMaximize = () => {
+    updateAppState(app.id, { isMinimized: false });
+    setActiveApp(app.id);
+  };
 
   const [debouncedSave, cancelDebounce] = useDebounceCallback(() => {
     setSaveStatus("saving");
@@ -74,7 +79,7 @@ const Window: React.FC<WindowProps> = ({ app, isActive }) => {
       }}
       exit={{ scale: 0, opacity: 0 }}
       style={{
-        zIndex: isActive ? 10 : 1,
+        zIndex: isActive ? 100 : 1,
         backgroundColor: getColor("Glass"),
         border: `1px solid ${getColor("Brd")}`,
       }}

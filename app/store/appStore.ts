@@ -1,9 +1,9 @@
 import { create } from "zustand";
 import { AppDefinition } from "../types/AppTypes";
 
-// Extended AppDefinition to include state
 interface AppWithState extends AppDefinition {
-  state: Record<string, any>; // Flexible state object for each app
+  state: Record<string, any>;
+  isMinimized: boolean;
 }
 
 interface AppState {
@@ -13,43 +13,53 @@ interface AppState {
   closeApp: (appId: string) => void;
   setActiveApp: (appId: string) => void;
   updateAppState: (appId: string, newState: Record<string, any>) => void;
+  minimizeApp: (appId: string) => void;
+  toggleAppMinimize: (appId: string) => void;
 }
 
 export const useAppStore = create<AppState>((set) => ({
   openApps: [],
   activeAppId: null,
 
-  // Open an app or bring it to focus if already open
   openApp: (app) =>
     set((state) => {
       const existingApp = state.openApps.find(
         (openApp) => openApp.id === app.id
       );
       if (existingApp) {
-        return { activeAppId: app.id };
+        return {
+          openApps: state.openApps.map((a) =>
+            a.id === app.id ? { ...a, isMinimized: false } : a
+          ),
+          activeAppId: app.id,
+        };
       }
-      // Create a new AppWithState object
-      const newApp: AppWithState = { ...app, state: {} };
+      const newApp: AppWithState = { ...app, state: {}, isMinimized: false };
       return {
         openApps: [...state.openApps, newApp],
         activeAppId: app.id,
       };
     }),
 
-  // Close an app
   closeApp: (appId) =>
     set((state) => ({
       openApps: state.openApps.filter((app) => app.id !== appId),
       activeAppId:
-        state.openApps.length > 1
-          ? state.openApps[state.openApps.length - 2].id
-          : null,
+        state.activeAppId === appId
+          ? state.openApps.length > 1
+            ? state.openApps[state.openApps.length - 2].id
+            : null
+          : state.activeAppId,
     })),
 
-  // Set the active app
-  setActiveApp: (appId) => set({ activeAppId: appId }),
+  setActiveApp: (appId) =>
+    set((state) => ({
+      activeAppId: appId,
+      openApps: state.openApps.map((app) =>
+        app.id === appId ? { ...app, isMinimized: false } : app
+      ),
+    })),
 
-  // Update the state of a specific app
   updateAppState: (appId, newState) =>
     set((state) => ({
       openApps: state.openApps.map((app) =>
@@ -58,4 +68,34 @@ export const useAppStore = create<AppState>((set) => ({
           : app
       ),
     })),
+
+  minimizeApp: (appId) =>
+    set((state) => ({
+      openApps: state.openApps.map((app) =>
+        app.id === appId ? { ...app, isMinimized: true } : app
+      ),
+      activeAppId: state.activeAppId === appId ? null : state.activeAppId,
+    })),
+
+  toggleAppMinimize: (appId) =>
+    set((state) => {
+      const app = state.openApps.find((a) => a.id === appId);
+      if (!app) return state;
+
+      if (app.isMinimized) {
+        return {
+          openApps: state.openApps.map((a) =>
+            a.id === appId ? { ...a, isMinimized: false } : a
+          ),
+          activeAppId: appId,
+        };
+      } else {
+        return {
+          openApps: state.openApps.map((a) =>
+            a.id === appId ? { ...a, isMinimized: true } : a
+          ),
+          activeAppId: state.activeAppId === appId ? null : state.activeAppId,
+        };
+      }
+    }),
 }));
