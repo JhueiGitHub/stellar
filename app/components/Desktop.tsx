@@ -16,18 +16,26 @@ const Desktop: React.FC = () => {
   }
 
   return (
-    <div
-      className="h-screen w-screen overflow-hidden"
-      style={{
-        backgroundColor: getColor("Black"),
-        color: getColor("Text Primary (Hd)"),
-        fontFamily: getFont("Text Primary"),
-      }}
-    >
-      {openApps.map((app) => (
-        <Window key={app.id} app={app} isActive={app.id === activeAppId} />
-      ))}
-      <Dock />
+    <div className="h-screen w-screen overflow-hidden relative">
+      <video
+        src="/media/siamese.mp4"
+        autoPlay
+        loop
+        muted
+        className="absolute inset-0 w-full h-full object-cover"
+      />
+      <div
+        className="relative z-10 h-full"
+        style={{
+          color: getColor("Text Primary (Hd)"),
+          fontFamily: getFont("Text Primary"),
+        }}
+      >
+        {openApps.map((app) => (
+          <Window key={app.id} app={app} isActive={app.id === activeAppId} />
+        ))}
+        <Dock />
+      </div>
     </div>
   );
 };
