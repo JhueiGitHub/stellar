@@ -22,6 +22,8 @@ const Navbar = ({
     (Array.isArray(value) &&
       value.some((val) => val?.value === activeElement?.value));
 
+  const itemTextStyle = "font-inter font-semibold text-[11px] text-[#CCCCCC] opacity-90";
+
   return (
     <nav className="flex select-none items-center justify-between gap-4 navbar-background px-5 text-white">
       <Image src="/assets/logo.svg" alt="FigPro Logo" width={58} height={20} />

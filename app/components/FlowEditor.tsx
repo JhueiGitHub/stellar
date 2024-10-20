@@ -116,7 +116,6 @@ const FlowEditor: React.FC = () => {
     <div
       className="w-full h-full p-6"
       style={{
-        backgroundColor: getColor("Underlying BG"),
         color: getColor("Text Primary (Hd)"),
       }}
     >

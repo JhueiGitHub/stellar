@@ -47,7 +47,6 @@ const FlowDashboard: React.FC = () => {
     <div
       className="p-6 h-full"
       style={{
-        backgroundColor: getColor("Underlying BG"),
         color: getColor("Text Primary (Hd)"),
       }}
     >

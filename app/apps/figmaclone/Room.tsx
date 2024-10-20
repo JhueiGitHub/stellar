@@ -16,7 +16,7 @@ const Room = ({ children }: { children: React.ReactNode }) => {
        *
        * initialPresence: https://liveblocks.io/docs/api-reference/liveblocks-react#RoomProvider
        */
-      initialPresence={{ cursor: null, cursorColor: null, editingText: null }}
+      initialPresence={{ editingText: null }}
       /**
        * initialStorage is used to initialize the storage of the room.
        *

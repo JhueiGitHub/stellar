@@ -1,15 +1,15 @@
-import "./globals.css";
+import { Metadata } from "next";
+import "../globals.css";
 
-export const metadata = {
-  title: "Figma Clone",
-  description:
-    "A minimalist Figma clone using fabric.js and Liveblocks for realtime collaboration",
+export const metadata: Metadata = {
+  title: "Obsidian Clone",
+  description: "A clone of Obsidian using Next.js and Zenith design system",
 };
 
-const RootLayout = ({ children }: { children: React.ReactNode }) => (
-  <html lang="en">
-    <body className="h-full w-full overflow-hidden">{children}</body>
-  </html>
-);
-
-export default RootLayout;
+export default function ObsidianLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  return { children };
+}

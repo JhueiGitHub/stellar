@@ -50,7 +50,7 @@ export const getShapeInfo = (shapeType: string) => {
   switch (shapeType) {
     case "rect":
       return {
-        icon: "/assets/rectangle.svg",
+        icon: "/icns/_frame.png",
         name: "Rectangle",
       };
 

@@ -1,14 +1,17 @@
 "use client";
 
-import dynamic from "next/dynamic";
+import { useStyles } from "@os/hooks/useStyles";
+import ObsidianContainer from "./components/ObsidianContainer";
+import Sidebar from "./components/Sidebar";
+import Editor from "./components/Editor";
 
-/**
- * disable ssr to avoid pre-rendering issues of Next.js
- *
- * we're doing this because we're using a canvas element that can't be pre-rendered by Next.js on the server
- */
-const Page = dynamic(() => import("./App"), { ssr: false });
+export default function ObsidianPage() {
+  const { getColor } = useStyles();
 
-export default function FinderPage() {
-  return <Page />;
+  return (
+    <ObsidianContainer>
+      <Sidebar />
+      <Editor />
+    </ObsidianContainer>
+  );
 }

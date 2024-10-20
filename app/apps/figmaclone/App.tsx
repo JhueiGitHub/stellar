@@ -224,51 +224,53 @@ const Home = () => {
     setActiveElement(elem);
 
     switch (elem?.value) {
-      // delete all the shapes from the canvas
       case "reset":
-        // clear the storage
         deleteAllShapes();
-        // clear the canvas
         fabricRef.current?.clear();
-        // set "select" as the active element
         setActiveElement(defaultNavElement);
         break;
 
-      // delete the selected shape from the canvas
       case "delete":
-        // delete it from the canvas
         handleDelete(fabricRef.current as any, deleteShapeFromStorage);
-        // set "select" as the active element
         setActiveElement(defaultNavElement);
         break;
 
-      // upload an image to the canvas
       case "image":
-        // trigger the click event on the input element which opens the file dialog
         imageInputRef.current?.click();
-        /**
-         * set drawing mode to false
-         * If the user is drawing on the canvas, we want to stop the
-         * drawing mode when clicked on the image item from the dropdown.
-         */
         isDrawing.current = false;
-
         if (fabricRef.current) {
-          // disable the drawing mode of canvas
           fabricRef.current.isDrawingMode = false;
         }
         break;
 
-      // for comments, do nothing
       case "comments":
         break;
 
       default:
-        // set the selected shape to the selected element
         selectedShapeRef.current = elem?.value as string;
         break;
     }
   };
+
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    e.stopPropagation();
+
+    const file = e.target.files?.[0];
+    if (file) {
+      console.log(file);
+    }
+  };
+
+  // Add this hidden input for image upload
+  const hiddenFileInput = (
+    <input
+      type="file"
+      ref={imageInputRef}
+      className="hidden"
+      accept="image/*"
+      onChange={handleImageUpload}
+    />
+  );
 
   useEffect(() => {
     // initialize the fabric canvas
@@ -488,25 +490,36 @@ const Home = () => {
     });
   }, [canvasObjects]);
 
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "f" || e.key === "F") {
+        handleActiveElement({
+          name: "Rectangle",
+          value: "rectangle",
+          icon: "/assets/rectangle.svg",
+        });
+      } else if (e.key === "v" || e.key === "V") {
+        handleActiveElement({
+          name: "Select",
+          value: "select",
+          icon: "/assets/select.svg",
+        });
+      } else if (e.key === "u" || e.key === "U") {
+        imageInputRef.current?.click();
+      }
+      // Add more keyboard shortcuts here as needed
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, []);
+
   return (
     <main className="h-screen overflow-hidden">
-      <Navbar
-        imageInputRef={imageInputRef}
-        activeElement={activeElement}
-        handleImageUpload={(e: any) => {
-          // prevent the default behavior of the input element
-          e.stopPropagation();
-
-          handleImageUpload({
-            file: e.target.files[0],
-            canvas: fabricRef as any,
-            shapeRef,
-            syncShapeInStorage,
-          });
-        }}
-        handleActiveElement={handleActiveElement}
-      />
-
+      {hiddenFileInput}
       <section className="flex h-full flex-row">
         <LeftSidebar allShapes={Array.from(canvasObjects)} />
 

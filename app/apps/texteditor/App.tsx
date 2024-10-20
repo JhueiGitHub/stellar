@@ -2,7 +2,7 @@
 
 const Home = () => {
   return (
-    <main className="h-screen overflow-hidden">
+    <main className="h-full overflow-hidden">
       <div></div>
     </main>
   );
