@@ -102,7 +102,7 @@ const Dock: React.FC = () => {
             >
               <FloatingDock
                 items={dockItems}
-                backgroundColor={getColor("Black")}
+                backgroundColor={getColor("Glass")}
                 borderColor={getColor("Brd")}
               />
             </motion.div>
