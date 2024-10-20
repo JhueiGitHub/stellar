@@ -3,7 +3,7 @@ import { ClerkProvider } from "@clerk/nextjs";
 import { DesignSystemProvider } from "./contexts/DesignSystemContext";
 
 export const metadata = {
-  title: "NextJS OS",
+  title: "Orion",
   description: "A web-based operating system built with Next.js",
 };
 
