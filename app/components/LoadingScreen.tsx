@@ -4,10 +4,10 @@ const LoadingScreen = () => {
   return (
     <div
       className="flex items-center justify-center h-screen w-screen"
-      style={{ backgroundColor: "#111111" }}
+      style={{ backgroundColor: "#010101" }}
     >
       <Image
-        src="/media/loading.gif"
+        src="/media/spatial.gif"
         alt="Loading..."
         width={360}
         height={360}
