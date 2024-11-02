@@ -90,6 +90,35 @@ export const initialProfile = async () => {
       },
     });
 
+    // Create initial Vault for Obsidian app
+    const initialVault = await prisma.vault.create({
+      data: {
+        name: "My First Vault",
+        profileId: profile.id,
+      },
+    });
+
+    // Create root folder in the Vault
+    const obsidianRootFolder = await prisma.obsidianFolder.create({
+      data: {
+        name: "Root",
+        vaultId: initialVault.id,
+        profileId: profile.id,
+      },
+    });
+
+    // Create welcome note in the Obsidian root folder
+    await prisma.obsidianNote.create({
+      data: {
+        title: "Welcome to Obsidian",
+        content:
+          "# Welcome to your Obsidian Vault\n\nThis is your first note. Feel free to edit it and create new notes!",
+        vaultId: initialVault.id,
+        folderId: obsidianRootFolder.id,
+        profileId: profile.id,
+      },
+    });
+
     return profile;
   });
 

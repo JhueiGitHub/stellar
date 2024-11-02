@@ -1,17 +1,26 @@
 "use client";
 
-import { useStyles } from "@os/hooks/useStyles";
-import ObsidianContainer from "./components/ObsidianContainer";
-import Sidebar from "./components/Sidebar";
-import Editor from "./components/Editor";
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
 
-export default function ObsidianPage() {
-  const { getColor } = useStyles();
+const ObsidianPage = () => {
+  const router = useRouter();
+
+  useEffect(() => {
+    // Simulate a delay before showing the 404 message
+    const timer = setTimeout(() => {
+      // You can customize this message or use a proper 404 component
+      console.log("404 - Obsidian Vault Not Found");
+    }, 100);
+
+    return () => clearTimeout(timer);
+  }, []);
 
   return (
-    <ObsidianContainer>
-      <Sidebar />
-      <Editor />
-    </ObsidianContainer>
+    <div className="flex items-center justify-center h-full">
+      <h1 className="text-2xl font-bold">404 - Obsidian Vault Not Found</h1>
+    </div>
   );
-}
+};
+
+export default ObsidianPage;

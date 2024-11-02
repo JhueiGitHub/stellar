@@ -1,6 +1,8 @@
+"use client";
+
 const Home = () => {
   return (
-    <main className="h-full overflow-hidden">
+    <main className="h-screen overflow-hidden">
       <div></div>
     </main>
   );

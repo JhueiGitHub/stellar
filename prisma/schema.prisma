@@ -15,13 +15,17 @@ model Profile {
   imageUrl String
   email    String
 
-  designSystem DesignSystem?
-  flows        Flow[]
-  folders      Folder[]
-  files        File[]
-  servers      Server[]
-  members      Member[]
-  channels     Channel[]
+  designSystem    DesignSystem?
+  flows           Flow[]
+  folders         Folder[]
+  files           File[]
+  mediaItems      MediaItem[] // Added relation
+  servers         Server[]
+  members         Member[]
+  channels        Channel[]
+  vaults          Vault[]
+  obsidianFolders ObsidianFolder[]
+  obsidianNotes   ObsidianNote[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -69,6 +73,25 @@ model TypographyToken {
   updatedAt      DateTime     @updatedAt
 
   @@index([designSystemId])
+}
+
+model MediaItem {
+  id        String    @id @default(uuid())
+  name      String // Original filename
+  type      MediaType // Enum for media types
+  url       String // Uploadcare CDN URL
+  profileId String
+  profile   Profile   @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@index([profileId])
+}
+
+enum MediaType {
+  IMAGE
+  VIDEO
+  FONT
 }
 
 model Flow {
@@ -132,6 +155,56 @@ model File {
   profileId String
   profile   Profile  @relation(fields: [profileId], references: [id])
 
+  @@index([folderId])
+  @@index([profileId])
+}
+
+model Vault {
+  id        String           @id @default(uuid())
+  name      String
+  profileId String
+  profile   Profile          @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  folders   ObsidianFolder[]
+  notes     ObsidianNote[]
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+
+  @@index([profileId])
+}
+
+model ObsidianFolder {
+  id         String           @id @default(uuid())
+  name       String
+  vaultId    String
+  vault      Vault            @relation(fields: [vaultId], references: [id], onDelete: Cascade)
+  parentId   String?
+  parent     ObsidianFolder?  @relation("ObsidianFolderToFolder", fields: [parentId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  subfolders ObsidianFolder[] @relation("ObsidianFolderToFolder")
+  notes      ObsidianNote[]
+  profileId  String
+  profile    Profile          @relation(fields: [profileId], references: [id])
+  createdAt  DateTime         @default(now())
+  updatedAt  DateTime         @updatedAt
+
+  @@index([vaultId])
+  @@index([parentId])
+  @@index([profileId])
+}
+
+model ObsidianNote {
+  id        String          @id @default(uuid())
+  title     String
+  content   String          @db.Text
+  vaultId   String
+  vault     Vault           @relation(fields: [vaultId], references: [id], onDelete: Cascade)
+  folderId  String?
+  folder    ObsidianFolder? @relation(fields: [folderId], references: [id])
+  profileId String
+  profile   Profile         @relation(fields: [profileId], references: [id])
+  createdAt DateTime        @default(now())
+  updatedAt DateTime        @updatedAt
+
+  @@index([vaultId])
   @@index([folderId])
   @@index([profileId])
 }

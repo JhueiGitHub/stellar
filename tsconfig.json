@@ -25,10 +25,12 @@
       "@fc/*": ["./app/apps/finder/components/*"],
       "@dis/*": ["./app/apps/discord/*"],
       "@disc/*": ["./app/apps/discord/components/*"],
-      "@fig/*": ["./app/apps/figmaclone/*"]
+      "@fig/*": ["./app/apps/figmaclone/*"],
+      "@obs/*": ["./app/apps/texteditor/*"],
+      "@obsc/*": ["./app/apps/texteditor/components/*"]
     },
     "target": "es2018",
-    "typeRoots": ["apps/figma/types"]
+    "types": ["@uploadcare/blocks/types/jsx"]
   },
   "include": [
     "next-env.d.ts",
