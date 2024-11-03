@@ -1,7 +1,6 @@
 import "./globals.css";
 import { ClerkProvider } from "@clerk/nextjs";
 import { DesignSystemProvider } from "./contexts/DesignSystemContext";
-import QueryProvider from "@/app/components/providers/query-provider";
 
 export const metadata = {
   title: "Orion",
@@ -16,11 +15,9 @@ export default function RootLayout({
   return (
     <ClerkProvider>
       <html lang="en">
-        <QueryProvider>
-          <DesignSystemProvider>
-            <body>{children}</body>
-          </DesignSystemProvider>
-        </QueryProvider>
+        <DesignSystemProvider>
+          <body>{children}</body>
+        </DesignSystemProvider>
       </html>
     </ClerkProvider>
   );

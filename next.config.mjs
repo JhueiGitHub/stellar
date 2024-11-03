@@ -10,7 +10,6 @@ const nextConfig = {
   eslint: {
     ignoreDuringBuilds: true,
   },
-  reactStrictMode: false,
   images: {
     domains: ["uploadthing.com", "utfs.io"],
     remotePatterns: [
@@ -18,14 +17,6 @@ const nextConfig = {
         protocol: "https",
         hostname: "liveblocks.io",
         port: "",
-      },
-      {
-        protocol: "https",
-        hostname: "img.clerk.com",
-      },
-      {
-        protocol: "https",
-        hostname: "ucarecdn.com",
       },
     ],
   },
