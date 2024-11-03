@@ -1,3 +1,4 @@
+// schema.prisma
 datasource db {
   provider     = "postgresql"
   url          = env("DATABASE_URL")
@@ -15,99 +16,48 @@ model Profile {
   imageUrl String
   email    String
 
-  designSystem    DesignSystem?
-  flows           Flow[]
-  folders         Folder[]
-  files           File[]
-  mediaItems      MediaItem[] // Added relation
-  servers         Server[]
-  members         Member[]
-  channels        Channel[]
-  vaults          Vault[]
-  obsidianFolders ObsidianFolder[]
-  obsidianNotes   ObsidianNote[]
+  designSystem   DesignSystem?
+  streams        Stream[]
+  constellations Constellation[]
+  folders        Folder[]
+  files          File[]
+  mediaItems     MediaItem[]
+  assets         Asset[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
 
-model DesignSystem {
-  id        String   @id @default(cuid())
+model Stream {
+  id        String  @id @default(cuid())
   name      String
-  profileId String   @unique
-  profile   Profile  @relation(fields: [profileId], references: [id])
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  colorTokens      ColorToken[]
-  typographyTokens TypographyToken[]
-  flows            Flow[]
-
-  @@index([profileId])
-}
-
-model ColorToken {
-  id             String       @id @default(cuid())
-  name           String
-  value          String
-  opacity        Int
-  designSystemId String
-  designSystem   DesignSystem @relation(fields: [designSystemId], references: [id])
-  createdAt      DateTime     @default(now())
-  updatedAt      DateTime     @updatedAt
-
-  @@index([designSystemId])
-}
-
-model TypographyToken {
-  id             String       @id @default(cuid())
-  name           String
-  fontFamily     String
-  fontSize       String?
-  fontWeight     String?
-  lineHeight     String?
-  letterSpacing  String?
-  designSystemId String
-  designSystem   DesignSystem @relation(fields: [designSystemId], references: [id])
-  createdAt      DateTime     @default(now())
-  updatedAt      DateTime     @updatedAt
-
-  @@index([designSystemId])
-}
-
-model MediaItem {
-  id        String    @id @default(uuid())
-  name      String // Original filename
-  type      MediaType // Enum for media types
-  url       String // Uploadcare CDN URL
   profileId String
-  profile   Profile   @relation(fields: [profileId], references: [id], onDelete: Cascade)
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
+  profile   Profile @relation(fields: [profileId], references: [id])
+  flows     Flow[]
 
   @@index([profileId])
-}
-
-enum MediaType {
-  IMAGE
-  VIDEO
-  FONT
 }
 
 model Flow {
   id             String          @id @default(cuid())
   name           String
-  description    String?
-  profileId      String
-  profile        Profile         @relation(fields: [profileId], references: [id])
-  designSystemId String
-  designSystem   DesignSystem    @relation(fields: [designSystemId], references: [id])
-  components     FlowComponent[]
-  createdAt      DateTime        @default(now())
-  updatedAt      DateTime        @updatedAt
+  type           FlowType
+  streamId       String
+  stream         Stream          @relation(fields: [streamId], references: [id])
+  components     FlowComponent[] // Changed from flowComponent
+  designSystemId String?
+  designSystem   DesignSystem?   @relation(fields: [designSystemId], references: [id])
+  nodes          Json
+  isAppConfig    Boolean         @default(false)
+  appId          String?
 
-  @@index([profileId])
+  @@index([streamId])
   @@index([designSystemId])
+}
+
+enum FlowType {
+  DESIGN_SYSTEM
+  APP_CONFIG
 }
 
 model FlowComponent {
@@ -119,220 +69,128 @@ model FlowComponent {
   fontFamily String?
   flowId     String
   flow       Flow     @relation(fields: [flowId], references: [id])
+  position   Json?
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
 
   @@index([flowId])
 }
 
+enum AssetType {
+  IMAGE
+  VIDEO
+  FONT
+}
+
+enum AssetCategory {
+  WALLPAPER
+  DOCK_ICON
+  WINDOW
+  GENERAL
+}
+
+model Asset {
+  id        String        @id @default(cuid())
+  name      String
+  type      AssetType
+  category  AssetCategory
+  url       String
+  profileId String
+  profile   Profile       @relation(fields: [profileId], references: [id])
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+
+  @@index([profileId])
+}
+
+model DesignSystem {
+  id               String            @id @default(cuid())
+  name             String
+  profileId        String            @unique
+  profile          Profile           @relation(fields: [profileId], references: [id])
+  flows            Flow[]
+  colorTokens      ColorToken[]
+  typographyTokens TypographyToken[]
+
+  @@index([profileId])
+}
+
+model ColorToken {
+  id             String       @id @default(cuid())
+  name           String
+  value          String
+  opacity        Int
+  designSystemId String
+  designSystem   DesignSystem @relation(fields: [designSystemId], references: [id])
+
+  @@index([designSystemId])
+}
+
+model TypographyToken {
+  id             String       @id @default(cuid())
+  name           String
+  fontFamily     String
+  fontSize       String?
+  fontWeight     String?
+  designSystemId String
+  designSystem   DesignSystem @relation(fields: [designSystemId], references: [id])
+
+  @@index([designSystemId])
+}
+
+model Constellation {
+  id           String  @id @default(cuid())
+  name         String
+  profileId    String
+  profile      Profile @relation(fields: [profileId], references: [id])
+  isActive     Boolean @default(false)
+  flowMappings Json // Maps appId to flowId
+
+  @@index([profileId])
+}
+
 model Folder {
-  id         String   @id @default(cuid())
-  name       String
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
-  profileId  String
-  profile    Profile  @relation(fields: [profileId], references: [id])
-  parentId   String?
-  parent     Folder?  @relation("FolderToFolder", fields: [parentId], references: [id], onDelete: Restrict, onUpdate: Restrict)
-  subfolders Folder[] @relation("FolderToFolder")
-  files      File[]
-  isRoot     Boolean  @default(false)
+  id        String   @id @default(cuid())
+  name      String
+  profileId String
+  profile   Profile  @relation(fields: [profileId], references: [id])
+  parentId  String?
+  parent    Folder?  @relation("FolderHierarchy", fields: [parentId], references: [id], onUpdate: Restrict, onDelete: Restrict)
+  children  Folder[] @relation("FolderHierarchy")
+  files     File[]
+  isRoot    Boolean  @default(false)
 
   @@index([profileId])
   @@index([parentId])
 }
 
 model File {
-  id        String   @id @default(cuid())
+  id        String  @id @default(cuid())
   name      String
   type      String
-  size      Int
-  content   String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  content   Json?
   folderId  String
-  folder    Folder   @relation(fields: [folderId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  folder    Folder  @relation(fields: [folderId], references: [id])
   profileId String
-  profile   Profile  @relation(fields: [profileId], references: [id])
+  profile   Profile @relation(fields: [profileId], references: [id])
 
   @@index([folderId])
   @@index([profileId])
 }
 
-model Vault {
-  id        String           @id @default(uuid())
+model MediaItem {
+  id        String    @id @default(uuid())
   name      String
+  type      MediaType
+  url       String
   profileId String
-  profile   Profile          @relation(fields: [profileId], references: [id], onDelete: Cascade)
-  folders   ObsidianFolder[]
-  notes     ObsidianNote[]
-  createdAt DateTime         @default(now())
-  updatedAt DateTime         @updatedAt
+  profile   Profile   @relation(fields: [profileId], references: [id])
 
   @@index([profileId])
 }
 
-model ObsidianFolder {
-  id         String           @id @default(uuid())
-  name       String
-  vaultId    String
-  vault      Vault            @relation(fields: [vaultId], references: [id], onDelete: Cascade)
-  parentId   String?
-  parent     ObsidianFolder?  @relation("ObsidianFolderToFolder", fields: [parentId], references: [id], onDelete: Restrict, onUpdate: Restrict)
-  subfolders ObsidianFolder[] @relation("ObsidianFolderToFolder")
-  notes      ObsidianNote[]
-  profileId  String
-  profile    Profile          @relation(fields: [profileId], references: [id])
-  createdAt  DateTime         @default(now())
-  updatedAt  DateTime         @updatedAt
-
-  @@index([vaultId])
-  @@index([parentId])
-  @@index([profileId])
-}
-
-model ObsidianNote {
-  id        String          @id @default(uuid())
-  title     String
-  content   String          @db.Text
-  vaultId   String
-  vault     Vault           @relation(fields: [vaultId], references: [id], onDelete: Cascade)
-  folderId  String?
-  folder    ObsidianFolder? @relation(fields: [folderId], references: [id])
-  profileId String
-  profile   Profile         @relation(fields: [profileId], references: [id])
-  createdAt DateTime        @default(now())
-  updatedAt DateTime        @updatedAt
-
-  @@index([vaultId])
-  @@index([folderId])
-  @@index([profileId])
-}
-
-model Server {
-  id         String @id @default(uuid())
-  name       String
-  imageUrl   String @db.Text
-  inviteCode String @unique
-
-  profileId String
-  profile   Profile @relation(fields: [profileId], references: [id], onDelete: Cascade)
-
-  members  Member[]
-  channels Channel[]
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@index([profileId])
-}
-
-enum MemberRole {
-  ADMIN
-  MODERATOR
-  GUEST
-}
-
-model Member {
-  id   String     @id @default(uuid())
-  role MemberRole @default(GUEST)
-
-  profileId String
-  profile   Profile @relation(fields: [profileId], references: [id], onDelete: Cascade)
-
-  serverId String
-  server   Server @relation(fields: [serverId], references: [id], onDelete: Cascade)
-
-  messages       Message[]
-  directMessages DirectMessage[]
-
-  conversationsInitiated Conversation[] @relation("MemberOne")
-  conversationsReceived  Conversation[] @relation("MemberTwo")
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@index([profileId])
-  @@index([serverId])
-}
-
-enum ChannelType {
-  TEXT
-  AUDIO
+enum MediaType {
+  IMAGE
   VIDEO
-}
-
-model Channel {
-  id   String      @id @default(uuid())
-  name String
-  type ChannelType @default(TEXT)
-
-  profileId String
-  profile   Profile @relation(fields: [profileId], references: [id], onDelete: Cascade)
-
-  serverId String
-  server   Server @relation(fields: [serverId], references: [id], onDelete: Cascade)
-
-  messages Message[]
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@index([profileId])
-  @@index([serverId])
-}
-
-model Message {
-  id      String  @id @default(uuid())
-  content String  @db.Text
-  fileUrl String? @db.Text
-
-  memberId String
-  member   Member @relation(fields: [memberId], references: [id], onDelete: Cascade)
-
-  channelId String
-  channel   Channel @relation(fields: [channelId], references: [id], onDelete: Cascade)
-
-  deleted Boolean @default(false)
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@index([channelId])
-  @@index([memberId])
-}
-
-model Conversation {
-  id String @id @default(uuid())
-
-  memberOneId String
-  memberOne   Member @relation("MemberOne", fields: [memberOneId], references: [id], onDelete: Cascade)
-
-  memberTwoId String
-  memberTwo   Member @relation("MemberTwo", fields: [memberTwoId], references: [id], onDelete: Cascade)
-
-  directMessages DirectMessage[]
-
-  @@unique([memberOneId, memberTwoId])
-  @@index([memberTwoId])
-}
-
-model DirectMessage {
-  id      String  @id @default(uuid())
-  content String  @db.Text
-  fileUrl String? @db.Text
-
-  memberId String
-  member   Member @relation(fields: [memberId], references: [id], onDelete: Cascade)
-
-  conversationId String
-  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
-
-  deleted Boolean @default(false)
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@index([memberId])
-  @@index([conversationId])
+  FONT
 }

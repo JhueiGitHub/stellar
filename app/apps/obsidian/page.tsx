@@ -2,7 +2,6 @@
 "use client";
 
 import { useState } from "react";
-import { motion } from "framer-motion";
 import {
   QueryClientProvider,
   QueryClient,
@@ -10,16 +9,10 @@ import {
 } from "@tanstack/react-query";
 import axios from "axios";
 import UploadCareButton from "@/app/components/uploadcare-button";
+import { MediaCard } from "@/app/components/media/MediaCard";
+import { MediaItem } from "@prisma/client";
 
 const queryClient = new QueryClient();
-
-interface MediaItem {
-  id: string;
-  name: string;
-  type: "IMAGE" | "VIDEO" | "FONT";
-  url: string;
-  createdAt: Date;
-}
 
 function MediaGrid() {
   const [isUploading, setIsUploading] = useState(false);
@@ -36,10 +29,7 @@ function MediaGrid() {
     try {
       setIsUploading(true);
 
-      // Better file type detection
       let type: "IMAGE" | "VIDEO" | "FONT";
-
-      // Convert URL to lowercase for case-insensitive matching
       const lowerUrl = cdnUrl.toLowerCase();
 
       if (lowerUrl.match(/\.(jpg|jpeg|png|gif|webp|bmp|svg)$/)) {
@@ -49,8 +39,6 @@ function MediaGrid() {
       } else if (lowerUrl.match(/\.(ttf|otf|woff|woff2)$/)) {
         type = "FONT";
       } else {
-        // Default to IMAGE if the extension isn't matched
-        // Since Uploadcare provides image URLs without extensions
         type = "IMAGE";
       }
 
@@ -58,6 +46,7 @@ function MediaGrid() {
         name: cdnUrl.split("/").pop() || "Untitled",
         type,
         url: cdnUrl,
+        size: 0, // You might want to get the actual file size
       };
 
       await axios.post("/api/media", uploadData);
@@ -72,7 +61,7 @@ function MediaGrid() {
   return (
     <div className="h-full w-full relative bg-black bg-opacity-80">
       <div className="absolute inset-0 flex flex-col p-4">
-        {/* Header with upload button */}
+        {/* Upload button */}
         <div className="flex justify-center mb-6">
           <div className="p-2">
             <UploadCareButton onUpload={handleUpload} />
@@ -81,36 +70,9 @@ function MediaGrid() {
 
         {/* Media grid */}
         <div className="flex-1 overflow-auto">
-          <div className="grid grid-cols-4 gap-4 p-4">
+          <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 p-4">
             {mediaItems.map((item) => (
-              <motion.div
-                key={item.id}
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                className="relative aspect-square rounded-lg overflow-hidden bg-[#292929] border border-[#292929]"
-              >
-                {item.type === "IMAGE" && (
-                  <img
-                    src={item.url}
-                    alt={item.name}
-                    className="w-full h-full object-cover"
-                  />
-                )}
-                {item.type === "VIDEO" && (
-                  <video
-                    src={item.url}
-                    className="w-full h-full object-cover"
-                    autoPlay
-                    muted
-                    loop
-                  />
-                )}
-                {item.type === "FONT" && (
-                  <div className="w-full h-full flex items-center justify-center text-[#ABC4C3]">
-                    <span className="text-sm">{item.name}</span>
-                  </div>
-                )}
-              </motion.div>
+              <MediaCard key={item.id} item={item} />
             ))}
           </div>
         </div>

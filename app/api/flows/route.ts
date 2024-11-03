@@ -1,8 +1,6 @@
-// app/api/flows/route.ts
-
 import { NextResponse } from "next/server";
-import { db } from "@/lib/db";
 import { currentProfile } from "@/lib/current-profile";
+import { db } from "@/lib/db";
 
 export async function GET() {
   try {
@@ -12,13 +10,18 @@ export async function GET() {
     }
 
     const flows = await db.flow.findMany({
-      where: { profileId: profile.id },
-      include: { components: true },
+      where: {
+        stream: {
+          profileId: profile.id
+        }
+      },
+      include: {
+        components: true
+      }
     });
 
     return NextResponse.json(flows);
   } catch (error) {
-    console.error("[FLOWS_GET]", error);
     return new NextResponse("Internal Error", { status: 500 });
   }
 }
@@ -30,19 +33,30 @@ export async function POST(req: Request) {
       return new NextResponse("Unauthorized", { status: 401 });
     }
 
-    const { name, description } = await req.json();
+    const { name, streamId, type, designSystemId, isAppConfig, appId } = await req.json();
+
     const flow = await db.flow.create({
       data: {
         name,
-        description,
-        profileId: profile.id,
-        designSystemId: profile.designSystem?.id ?? "", // Assuming the profile has a design system
+        streamId,
+        type,
+        designSystemId,
+        isAppConfig,
+        appId,
+        nodes: isAppConfig ? {
+          wallpaper: {
+            type: "color",
+            value: "#000000"
+          }
+        } : {}
       },
+      include: {
+        components: true
+      }
     });
 
     return NextResponse.json(flow);
   } catch (error) {
-    console.error("[FLOWS_POST]", error);
     return new NextResponse("Internal Error", { status: 500 });
   }
 }
