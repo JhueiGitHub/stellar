@@ -3,7 +3,7 @@
 import { usePathname } from "next/navigation";
 import { DesignSystemProvider } from "../../contexts/DesignSystemContext";
 import { FlowSidebar } from "./components/FlowSidebar";
-import "../styles/globals.css";
+import "./styles/globals.css";
 
 export default function FlowLayout({
   children,
