@@ -41,7 +41,7 @@ const Finder: React.FC<ReturnType<typeof useFileSystem>> = ({
     id: string;
     position: { x: number; y: number };
   } | null>(null);
-  const [isSidebarVisible, setIsSidebarVisible] = useState(false);
+  const [isSidebarVisible, setIsSidebarVisible] = useState(true);
   const [isDraggingOverSidebar, setIsDraggingOverSidebar] = useState(false);
   const [draggingFolder, setDraggingFolder] = useState<FileSystemItem | null>(
     null
@@ -52,12 +52,18 @@ const Finder: React.FC<ReturnType<typeof useFileSystem>> = ({
 
   const handleMouseMove = useCallback(
     (e: MouseEvent) => {
+      // TEMPORARILY DISABLED: Auto-hide sidebar logic
+      /*
       const explorerRect = explorerRef.current?.getBoundingClientRect();
       if (explorerRect) {
         const threshold = 100;
         const isNearLeftEdge = e.clientX - explorerRect.left < threshold;
         setIsSidebarVisible(isNearLeftEdge || !!draggingFolder);
       }
+      */
+
+      // Force sidebar to stay visible
+      setIsSidebarVisible(true);
     },
     [draggingFolder]
   );

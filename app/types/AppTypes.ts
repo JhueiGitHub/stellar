@@ -16,7 +16,7 @@ export const appDefinitions: AppDefinition[] = [
     animationType: "grow",
   },
   {
-    id: "flow",
+    id: "mila",
     name: "Settings",
     icon: "/media/settings.png",
     dockPosition: 1,
@@ -30,7 +30,7 @@ export const appDefinitions: AppDefinition[] = [
     animationType: "magnify",
   },
   {
-    id: "mila",
+    id: "flow",
     name: "Mila",
     icon: "/media/mila.png",
     dockPosition: 3,

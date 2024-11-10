@@ -1,11 +1,8 @@
+// app/page.tsx
 "use client";
 
-const Home = () => {
-  return (
-    <main className="h-screen overflow-hidden">
-      <div></div>
-    </main>
-  );
-};
+import FlowDashboard from "./components/FlowDashboard";
 
-export default Home;
+export default function FlowPage() {
+  return <FlowDashboard />;
+}
