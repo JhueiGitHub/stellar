@@ -1,30 +1,15 @@
-"use client";
+import "./globals.css";
 
-import { usePathname } from "next/navigation";
-import { DesignSystemProvider } from "../../contexts/DesignSystemContext";
-import { FlowSidebar } from "./components/FlowSidebar";
-import "./styles/globals.css";
+export const metadata = {
+  title: "Figma Clone",
+  description:
+    "A minimalist Figma clone using fabric.js and Liveblocks for realtime collaboration",
+};
 
-export default function FlowLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
-  const pathname = usePathname();
-  const isEditor = pathname.includes("/flow/editor");
+const RootLayout = ({ children }: { children: React.ReactNode }) => (
+  <html lang="en">
+    <body className="h-full w-full overflow-hidden">{children}</body>
+  </html>
+);
 
-  return (
-    <DesignSystemProvider>
-      <div className="h-screen bg-[#d52929]">
-        {!isEditor ? (
-          <div className="flex h-screen overflow-hidden">
-            <FlowSidebar />
-            {children}
-          </div>
-        ) : (
-          children
-        )}
-      </div>
-    </DesignSystemProvider>
-  );
-}
+export default RootLayout;

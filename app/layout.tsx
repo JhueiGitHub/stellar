@@ -1,4 +1,5 @@
 import "./globals.css";
+import OTPWrapper from "@/app/components/custom-otp-input";
 import { ClerkProvider } from "@clerk/nextjs";
 import { DesignSystemProvider } from "./contexts/DesignSystemContext";
 
@@ -16,7 +17,9 @@ export default function RootLayout({
     <ClerkProvider>
       <html lang="en">
         <DesignSystemProvider>
-          <body>{children}</body>
+          <body className="h-screen w-screen bg-black">
+            <OTPWrapper>{children}</OTPWrapper>
+          </body>
         </DesignSystemProvider>
       </html>
     </ClerkProvider>
