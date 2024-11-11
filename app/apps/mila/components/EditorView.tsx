@@ -1,7 +1,5 @@
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ShootingStars } from "./ui/shooting-stars";
-import { StarsBackground } from "./ui/stars-background";
 import { FileTree, Folder, File } from "./ui/file-tree";
 import FlowCanvasContents from "./FlowCanvasContents";
 
@@ -50,16 +48,12 @@ export const EditorView = ({ flowId, onClose }: EditorViewProps) => {
 
   return (
     <div className="fixed inset-0 z-50 bg-[#010203]">
-      {/* Main Canvas with adjusted container padding */}
       <div className="w-full h-full relative">
-        <ShootingStars />
-        <StarsBackground />
-        
         {/* Adjusted padding for canvas content to ensure visibility with sidebars */}
-        <div className="absolute inset-0 px-[280px]"> {/* Added 16px buffer on each side */}
+        <div className="absolute inset-0 px-[280px]">
           <FlowCanvasContents />
         </div>
-        
+
         <button
           onClick={onClose}
           className="absolute top-4 right-4 text-white/70 hover:text-white"

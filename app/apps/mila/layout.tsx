@@ -15,7 +15,7 @@ export default function FlowLayout({
 
   return (
     <DesignSystemProvider>
-      <div className="h-screen bg-[#010203]">
+      <div className="h-screen bg-[#d52929]">
         {!isEditor ? (
           <div className="flex h-screen overflow-hidden">
             <FlowSidebar />
