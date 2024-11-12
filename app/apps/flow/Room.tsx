@@ -1,4 +1,4 @@
-// /root/app/apps/flow/Room.tsx
+// app/apps/flow/Room.tsx
 "use client";
 
 import { LiveMap } from "@liveblocks/client";

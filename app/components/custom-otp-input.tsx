@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/input-otp";
 
 const exemplarPro = localFont({
-  src: "../../../public/fonts/ExemplarPro.otf",
+  src: "../../public/fonts/ExemplarPro.otf",
 });
 
 interface OTPWrapperProps {

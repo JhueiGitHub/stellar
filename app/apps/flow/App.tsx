@@ -1,8 +1,24 @@
-// app/page.tsx
+// app/apps/flow/App.tsx
 "use client";
 
-import FlowDashboard from "./components/FlowDashboard";
+import React from "react";
+import { useFlowStore } from "@/app/store/flowStore";
+import { FlowDashboard } from "./components/FlowDashboard";
+import { EditorView } from "./components/EditorView";
 
-export default function FlowPage() {
-  return <FlowDashboard />;
-}
+const App: React.FC = () => {
+  const { activeFlowId, setActiveFlow } = useFlowStore();
+
+  // Only render EditorView if we have an activeFlowId
+  return (
+    <div className="w-full h-full" style={{ backgroundColor: "#010203" }}>
+      {activeFlowId ? (
+        <EditorView flowId={activeFlowId} onClose={() => setActiveFlow(null)} />
+      ) : (
+        <FlowDashboard />
+      )}
+    </div>
+  );
+};
+
+export default App;

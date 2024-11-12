@@ -1,9 +1,7 @@
 // app/api/flows/[flowId]/route.ts
-
 import { NextResponse } from "next/server";
-import { db } from "@/lib/db";
 import { currentProfile } from "@/lib/current-profile";
-import { Flow, FlowComponent } from "@prisma/client";
+import { db } from "@/lib/db";
 
 export async function GET(
   req: Request,
@@ -11,21 +9,29 @@ export async function GET(
 ) {
   try {
     const profile = await currentProfile();
+
     if (!profile) {
       return new NextResponse("Unauthorized", { status: 401 });
     }
 
     const flow = await db.flow.findUnique({
-      where: { id: params.flowId, profileId: profile.id },
-      include: { components: true },
+      where: {
+        id: params.flowId,
+        profileId: profile.id,
+      },
+      include: {
+        designSystem: {
+          include: {
+            colorTokens: true,
+            typographyTokens: true,
+          },
+        },
+        components: true,
+      },
     });
 
-    if (!flow) {
-      return new NextResponse("Flow not found", { status: 404 });
-    }
-
     return NextResponse.json(flow);
-  } catch (error: unknown) {
+  } catch (error) {
     console.error("[FLOW_GET]", error);
     return new NextResponse("Internal Error", { status: 500 });
   }
@@ -37,52 +43,24 @@ export async function PATCH(
 ) {
   try {
     const profile = await currentProfile();
+    const { name, description } = await req.json();
+
     if (!profile) {
       return new NextResponse("Unauthorized", { status: 401 });
     }
 
-    const { components } = await req.json();
-
-    const updatedFlow = await db.flow.update({
+    const flow = await db.flow.update({
       where: {
         id: params.flowId,
         profileId: profile.id,
       },
       data: {
-        components: {
-          deleteMany: {},
-          createMany: {
-            data: components.map((component: any) => {
-              const baseComponent = {
-                type: component.type,
-                name: component.name,
-              };
-
-              if (component.type === 'color') {
-                return {
-                  ...baseComponent,
-                  value: component.value,
-                  opacity: component.opacity ? parseInt(component.opacity as string, 10) : null,
-                };
-              } else if (component.type === 'typography') {
-                return {
-                  ...baseComponent,
-                  fontFamily: component.fontFamily,
-                  value: component.fontFamily, // Use fontFamily as value for typography components
-                };
-              }
-
-              return baseComponent;
-            }),
-          },
-        },
-      },
-      include: {
-        components: true,
+        name,
+        description,
       },
     });
 
-    return NextResponse.json(updatedFlow);
+    return NextResponse.json(flow);
   } catch (error) {
     console.error("[FLOW_PATCH]", error);
     return new NextResponse("Internal Error", { status: 500 });

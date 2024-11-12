@@ -1,8 +1,7 @@
-// app/api/flows/route.ts
-
+// app/api/flows/initial/route.ts
 import { NextResponse } from "next/server";
-import { db } from "@/lib/db";
 import { currentProfile } from "@/lib/current-profile";
+import { db } from "@/lib/db";
 
 export async function GET() {
   try {
@@ -33,30 +32,6 @@ export async function GET() {
     return NextResponse.json({ flows });
   } catch (error) {
     console.error("[FLOWS_GET]", error);
-    return new NextResponse("Internal Error", { status: 500 });
-  }
-}
-
-export async function POST(req: Request) {
-  try {
-    const profile = await currentProfile();
-    if (!profile) {
-      return new NextResponse("Unauthorized", { status: 401 });
-    }
-
-    const { name, description } = await req.json();
-    const flow = await db.flow.create({
-      data: {
-        name,
-        description,
-        profileId: profile.id,
-        designSystemId: profile.designSystem?.id ?? "", // Assuming the profile has a design system
-      },
-    });
-
-    return NextResponse.json(flow);
-  } catch (error) {
-    console.error("[FLOWS_POST]", error);
     return new NextResponse("Internal Error", { status: 500 });
   }
 }
