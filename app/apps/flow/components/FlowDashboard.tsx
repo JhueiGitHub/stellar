@@ -1,4 +1,4 @@
-// app/apps/flow/components/FlowDashboard.tsx
+// components/FlowDashboard.tsx
 import { FlowSidebar } from "./FlowSidebar";
 import { FlowContent } from "./FlowContent";
 
@@ -10,3 +10,5 @@ export const FlowDashboard = () => {
     </div>
   );
 };
+
+export default FlowDashboard;

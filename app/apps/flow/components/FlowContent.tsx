@@ -1,4 +1,3 @@
-// app/apps/flow/components/FlowContent.tsx
 import { useState } from "react";
 import { FlowHeader } from "./FlowHeader";
 import { FlowGrid } from "./FlowGrid";

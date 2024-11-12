@@ -1,7 +1,10 @@
-// app/apps/flow/components/FlowSidebar.tsx
+// components/FlowSidebar.tsx
+import { Button } from "@/components/ui/button";
+
 export const FlowSidebar = () => {
   return (
     <div className="w-[264px] h-full flex flex-col border-r border-white/[0.09]">
+      {/* Search */}
       <div className="h-[56px] flex items-center px-2 border-b border-white/[0.09]">
         <div className="w-full h-[32px] bg-[#292929]/50 rounded-md pl-[11px] flex items-center gap-[13px]">
           <img src="/icns/_search.png" alt="Search" className="w-3 h-3" />
@@ -11,13 +14,66 @@ export const FlowSidebar = () => {
         </div>
       </div>
 
+      {/* Navigation */}
       <div className="h-[152px] py-3 border-b border-white/[0.09]">
         <div className="h-8 pl-[15px] flex items-center gap-[13px]">
           <img src="/icns/_avatar.png" alt="Avatar" className="w-4 h-4" />
           <span className="text-[13px] font-semibold text-[#cccccc]/80">
-            Flows
+            Odin
+          </span>
+          <img
+            src="/icns/_chev.png"
+            alt="Chevron"
+            className="w-[7px] h-[7px] -rotate-90"
+          />
+        </div>
+
+        <Button
+          variant="ghost"
+          className="w-full h-8 pl-[15px] justify-start gap-[13px] text-[11px] text-[#cccccc]/70"
+        >
+          <img src="/icns/_all.png" alt="All" className="w-4 h-4" />
+          All Streams
+        </Button>
+
+        <Button
+          variant="ghost"
+          className="w-full h-8 pl-[15px] justify-start gap-[13px] text-[11px] text-[#cccccc]/70"
+        >
+          <img src="/icns/_stellar.png" alt="Stellar" className="w-4 h-4" />
+          Stellar
+        </Button>
+
+        <Button
+          variant="ghost"
+          className="w-full h-8 pl-[15px] justify-start gap-[13px] text-[11px] text-[#cccccc]/70"
+        >
+          <img src="/icns/_archive.png" alt="Archive" className="w-4 h-4" />
+          Archive
+        </Button>
+      </div>
+
+      {/* Favorites */}
+      <div className="py-3">
+        <div className="h-8 pl-[18px] flex items-center">
+          <span className="text-[11px] font-semibold text-[#cccccc]/80">
+            Favourites
           </span>
         </div>
+        <Button
+          variant="ghost"
+          className="w-full h-8 pl-[17px] justify-start gap-[13px] text-[11px] text-[#cccccc]/70"
+        >
+          <img src="/icns/_folder.png" alt="Folder" className="w-4 h-4" />
+          Dopa P1
+        </Button>
+        <Button
+          variant="ghost"
+          className="w-full h-8 pl-[17px] justify-start gap-[13px] text-[11px] text-[#cccccc]/70"
+        >
+          <img src="/icns/_folder.png" alt="Folder" className="w-4 h-4" />
+          FlowV2
+        </Button>
       </div>
     </div>
   );
