@@ -18,9 +18,10 @@ export const initialProfile = async () => {
     return profile;
   }
 
-  // Use a transaction to ensure all related records are created
-  const newProfile = await db.$transaction(async (prisma) => {
-    const profile = await prisma.profile.create({
+  // Use Prisma transaction to ensure all operations complete together
+  const newProfile = await db.$transaction(async (tx) => {
+    // 1. Create the profile
+    const profile = await tx.profile.create({
       data: {
         userId: user.id,
         name: `${user.firstName} ${user.lastName}`,
@@ -29,7 +30,7 @@ export const initialProfile = async () => {
       },
     });
 
-    const zenithDesignSystem = await prisma.designSystem.create({
+    const designSystem = await tx.designSystem.create({
       data: {
         name: "Zenith",
         profileId: profile.id,
@@ -60,17 +61,38 @@ export const initialProfile = async () => {
       },
     });
 
-    await prisma.flow.create({
+    // 3. Create core stream
+    const stream = await tx.stream.create({
+      data: {
+        name: "Core",
+        description: "Core design system stream",
+        type: "CORE",
+        profileId: profile.id,
+      },
+    });
+
+    // 4. Create initial flow
+    await tx.flow.create({
       data: {
         name: "Zenith",
-        description: "Default Zenith flow",
+        description: "Core design system flow",
+        type: "CORE",
         profileId: profile.id,
-        designSystemId: zenithDesignSystem.id,
+        streamId: stream.id,
+        designSystemId: designSystem.id,
+        components: {
+          create: [
+            { name: "Wallpaper", type: "VIDEO", value: null },
+            { name: "Dock Icons", type: "IMAGE", value: null },
+            { name: "Font Primary", type: "FONT", value: null },
+            { name: "Font Secondary", type: "FONT", value: null },
+          ],
+        },
       },
     });
 
     // Create root folder for the user
-    const rootFolder = await prisma.folder.create({
+    const rootFolder = await tx.folder.create({
       data: {
         name: "Root",
         isRoot: true,
@@ -79,7 +101,7 @@ export const initialProfile = async () => {
     });
 
     // Create initial welcome file in the root folder
-    await prisma.file.create({
+    await tx.file.create({
       data: {
         name: "Welcome.txt",
         type: "text/plain",

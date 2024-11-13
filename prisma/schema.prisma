@@ -15,6 +15,9 @@ model Profile {
   imageUrl String
   email    String
 
+  // Add relationship to Stream
+  streams Stream[]
+
   designSystem DesignSystem?
   flows        Flow[]
   folders      Folder[]
@@ -25,6 +28,31 @@ model Profile {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+// New Stream model
+model Stream {
+  id          String     @id @default(cuid())
+  name        String
+  description String?
+  type        StreamType @default(CORE)
+
+  // Relationships
+  profileId String
+  profile   Profile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  flows     Flow[] // Flows in this stream
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([profileId])
+}
+
+// Add new enums
+enum StreamType {
+  CORE
+  CONFIG
+  CUSTOM
 }
 
 model DesignSystem {
@@ -75,8 +103,11 @@ model Flow {
   id             String          @id @default(cuid())
   name           String
   description    String?
+  type           FlowType        @default(CORE)
   profileId      String
   profile        Profile         @relation(fields: [profileId], references: [id])
+  streamId       String? // Optional as some flows might not belong to a stream
+  stream         Stream?         @relation(fields: [streamId], references: [id])
   designSystemId String
   designSystem   DesignSystem    @relation(fields: [designSystemId], references: [id])
   components     FlowComponent[]
@@ -84,7 +115,14 @@ model Flow {
   updatedAt      DateTime        @updatedAt
 
   @@index([profileId])
+  @@index([streamId])
   @@index([designSystemId])
+}
+
+enum FlowType {
+  CORE
+  CONFIG
+  CUSTOM
 }
 
 model FlowComponent {
