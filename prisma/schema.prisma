@@ -25,25 +25,26 @@ model Profile {
   servers      Server[]
   members      Member[]
   channels     Channel[]
+  appConfigs   AppConfig[] // New relation
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
 }
 
 // New Stream model
+// Existing Stream model (updated)
 model Stream {
   id          String     @id @default(cuid())
   name        String
   description String?
-  type        StreamType @default(CORE)
+  type        StreamType
+  
+  profileId   String
+  profile     Profile    @relation(fields: [profileId], references: [id])
+  flows       Flow[]     // Flows in this stream
 
-  // Relationships
-  profileId String
-  profile   Profile @relation(fields: [profileId], references: [id], onDelete: Cascade)
-  flows     Flow[] // Flows in this stream
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
 
   @@index([profileId])
 }
@@ -101,6 +102,7 @@ model TypographyToken {
 
 model Flow {
   id             String          @id @default(cuid())
+  appId          String? // e.g. "orion"
   name           String
   description    String?
   type           FlowType        @default(CORE)
@@ -111,18 +113,22 @@ model Flow {
   designSystemId String
   designSystem   DesignSystem    @relation(fields: [designSystemId], references: [id])
   components     FlowComponent[]
+  appConfig      AppConfig?      // New relation
+
   createdAt      DateTime        @default(now())
   updatedAt      DateTime        @updatedAt
 
   @@index([profileId])
   @@index([streamId])
   @@index([designSystemId])
+  @@index([appId])
 }
 
+// Updated FlowType enum
 enum FlowType {
-  CORE
-  CONFIG
-  CUSTOM
+  CORE    // Design system standards
+  CONFIG  // App-specific mappings
+  CUSTOM  // User flows
 }
 
 model FlowComponent {
@@ -132,11 +138,32 @@ model FlowComponent {
   value      String?
   opacity    Int?
   fontFamily String?
+  strokeWidth    Float?   // New field for border widths
+  mappedTokenId  String?  // New field to reference design system tokens
+
   flowId     String
   flow       Flow     @relation(fields: [flowId], references: [id])
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
 
+  @@index([flowId])
+}
+
+// New model for app configuration
+model AppConfig {
+  id        String   @id @default(cuid())
+  appId     String   // e.g. "orion", "finder", etc.
+  flowId    String   @unique // One config flow per app
+  profileId String
+  
+  flow      Flow     @relation(fields: [flowId], references: [id])
+  profile   Profile  @relation(fields: [profileId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([appId, profileId])
+  @@index([profileId])
   @@index([flowId])
 }
 

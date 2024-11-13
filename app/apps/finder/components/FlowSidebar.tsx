@@ -1,7 +1,10 @@
-// components/FlowSidebar.tsx
 import { Button } from "@/components/ui/button";
 
-export const FlowSidebar = () => {
+interface FlowSidebarProps {
+  onViewChange: (view: string) => void;
+}
+
+export const FlowSidebar = ({ onViewChange }: FlowSidebarProps) => {
   return (
     <div className="w-[264px] h-full flex flex-col border-r border-white/[0.09]">
       {/* Search */}
@@ -31,6 +34,7 @@ export const FlowSidebar = () => {
         <Button
           variant="ghost"
           className="w-full h-8 pl-[15px] justify-start gap-[13px] text-[11px] text-[#cccccc]/70"
+          onClick={() => onViewChange("streams")}
         >
           <img src="/icns/_all.png" alt="All" className="w-4 h-4" />
           All Streams
@@ -39,9 +43,10 @@ export const FlowSidebar = () => {
         <Button
           variant="ghost"
           className="w-full h-8 pl-[15px] justify-start gap-[13px] text-[11px] text-[#cccccc]/70"
+          onClick={() => onViewChange("apps")}
         >
           <img src="/icns/_stellar.png" alt="Stellar" className="w-4 h-4" />
-          Stellar
+          Apps
         </Button>
 
         <Button

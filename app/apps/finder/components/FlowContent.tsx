@@ -1,46 +1,63 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { FlowHeader } from "./FlowHeader";
 import { FlowGrid } from "./FlowGrid";
 import { StreamView } from "./StreamView";
 import { EditorView } from "./canvas/EditorView";
 
-export const FlowContent = () => {
-  const [currentView, setCurrentView] = useState<{
-    type: "dashboard" | "stream" | "editor";
+export const FlowContent = ({ currentView = "streams" }) => {
+  const [viewState, setViewState] = useState<{
+    type: "dashboard" | "stream" | "editor" | "apps";
     id?: string;
   }>({ type: "dashboard" });
 
+  // Update view when sidebar selection changes
+  useEffect(() => {
+    setViewState((prev) => ({
+      ...prev,
+      type: currentView === "apps" ? "apps" : "dashboard"
+    }));
+  }, [currentView]);
+
   return (
     <div className="flex-1 min-w-0">
-      {currentView.type === "dashboard" && (
+      {viewState.type === "dashboard" && (
         <>
           <FlowHeader title="Flow" subtitle="All Streams" onBack={null} />
           <FlowGrid
-            onStreamSelect={(id) => setCurrentView({ type: "stream", id })}
+            onStreamSelect={(id) => setViewState({ type: "stream", id })}
           />
         </>
       )}
 
-      {currentView.type === "stream" && (
+      {viewState.type === "apps" && (
+        <>
+          <FlowHeader title="Apps" subtitle="OS Configurations" onBack={null} />
+          <FlowGrid
+  onStreamSelect={(streamId) => setViewState({ type: "stream", id: streamId })}
+/>
+        </>
+      )}
+
+      {viewState.type === "stream" && (
         <>
           <FlowHeader
-            title={currentView.id || ""}
+            title={viewState.id || ""}
             subtitle="Flows"
-            onBack={() => setCurrentView({ type: "dashboard" })}
+            onBack={() => setViewState({ type: "dashboard" })}
           />
           <StreamView
-            streamId={currentView.id || ""}
+            streamId={viewState.id || ""}
             onFlowSelect={(flowId) =>
-              setCurrentView({ type: "editor", id: flowId })
+              setViewState({ type: "editor", id: flowId })
             }
           />
         </>
       )}
 
-      {currentView.type === "editor" && (
+      {viewState.type === "editor" && (
         <EditorView
-          flowId={currentView.id || ""}
-          onClose={() => setCurrentView({ type: "stream", id: "os" })}
+          flowId={viewState.id || ""}
+          onClose={() => setViewState({ type: "stream", id: "os" })}
         />
       )}
     </div>
