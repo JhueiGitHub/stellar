@@ -1,8 +1,16 @@
 // contexts/DesignSystemContext.tsx
 "use client";
 
-import React, { createContext, useContext, useState, useEffect } from "react";
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  useCallback,
+  useRef,
+} from "react";
 import { DesignSystem, ColorToken, TypographyToken } from "@prisma/client";
+import { debounce } from "lodash";
 
 interface DesignSystemContextType {
   designSystem:
@@ -30,10 +38,7 @@ export const DesignSystemProvider: React.FC<{ children: React.ReactNode }> = ({
   const [designSystem, setDesignSystem] =
     useState<DesignSystemContextType["designSystem"]>(null);
   const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    fetchDesignSystem();
-  }, []);
+  const updateInProgress = useRef(false);
 
   const fetchDesignSystem = async () => {
     try {
@@ -47,26 +52,40 @@ export const DesignSystemProvider: React.FC<{ children: React.ReactNode }> = ({
     }
   };
 
+  useEffect(() => {
+    fetchDesignSystem();
+  }, []);
+
+  const debouncedUpdate = useCallback(
+    debounce(async (updatedSystem: DesignSystemContextType["designSystem"]) => {
+      if (!updatedSystem || updateInProgress.current) return;
+
+      updateInProgress.current = true;
+      try {
+        await fetch("/api/design-system", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(updatedSystem),
+        });
+      } catch (error) {
+        console.error("Failed to update design system:", error);
+      } finally {
+        updateInProgress.current = false;
+      }
+    }, 1000),
+    []
+  );
+
   const updateDesignSystem = async (
     updatedSystem: DesignSystemContextType["designSystem"]
   ) => {
     if (!updatedSystem) return;
-    try {
-      const response = await fetch("/api/design-system", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(updatedSystem),
-      });
-      if (!response.ok) {
-        throw new Error("Failed to update design system");
-      }
-      const data = await response.json();
-      setDesignSystem(data);
-    } catch (error) {
-      console.error("Failed to update design system:", error);
-      // Optionally, revert the local state if the update fails
-      await fetchDesignSystem();
-    }
+
+    // Optimistically update local state
+    setDesignSystem(updatedSystem);
+
+    // Debounce the actual API call
+    debouncedUpdate(updatedSystem);
   };
 
   return (

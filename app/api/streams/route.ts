@@ -26,12 +26,8 @@ export async function GET() {
           },
         },
       },
-      orderBy: {
-        createdAt: "desc",
-      },
     });
 
-    // 4. Return the streams as JSON
     return NextResponse.json(streams);
   } catch (error) {
     console.error("[STREAMS_GET]", error);

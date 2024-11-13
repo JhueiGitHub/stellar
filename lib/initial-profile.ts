@@ -20,7 +20,7 @@ export const initialProfile = async () => {
 
   // Use Prisma transaction to ensure all operations complete together
   const newProfile = await db.$transaction(async (tx) => {
-    // 1. Create the profile
+    // Profile creation stays the same...
     const profile = await tx.profile.create({
       data: {
         userId: user.id,
@@ -30,6 +30,7 @@ export const initialProfile = async () => {
       },
     });
 
+    // Design system creation stays the same...
     const designSystem = await tx.designSystem.create({
       data: {
         name: "Zenith",
@@ -61,7 +62,7 @@ export const initialProfile = async () => {
       },
     });
 
-    // 3. Create core stream
+    // Stream creation stays the same...
     const stream = await tx.stream.create({
       data: {
         name: "Core",
@@ -71,7 +72,7 @@ export const initialProfile = async () => {
       },
     });
 
-    // 4. Create initial flow
+    // Modified flow creation to include design system tokens as components
     await tx.flow.create({
       data: {
         name: "Zenith",
@@ -82,6 +83,61 @@ export const initialProfile = async () => {
         designSystemId: designSystem.id,
         components: {
           create: [
+            // Map color tokens to components
+            {
+              name: "Underlying BG",
+              type: "COLOR",
+              value: "#292929",
+              opacity: 81,
+            },
+            {
+              name: "Overlaying BG",
+              type: "COLOR",
+              value: "#010203",
+              opacity: 69,
+            },
+            { name: "Brd", type: "COLOR", value: "#292929", opacity: 81 },
+            { name: "Black", type: "COLOR", value: "#000000", opacity: 100 },
+            { name: "Glass", type: "COLOR", value: "#000000", opacity: 30 },
+            { name: "White", type: "COLOR", value: "#CCCCCC", opacity: 69 },
+            {
+              name: "Lilac Accent",
+              type: "COLOR",
+              value: "#7B6CBD",
+              opacity: 100,
+            },
+            {
+              name: "Teal Accent",
+              type: "COLOR",
+              value: "#003431",
+              opacity: 100,
+            },
+            {
+              name: "Text Primary (Hd)",
+              type: "COLOR",
+              value: "#ABC4C3",
+              opacity: 100,
+            },
+            {
+              name: "Text Secondary (Bd)",
+              type: "COLOR",
+              value: "#748393",
+              opacity: 100,
+            },
+            // Map typography tokens to components
+            {
+              name: "Text Primary",
+              type: "TYPOGRAPHY",
+              value: null,
+              fontFamily: "Arial",
+            },
+            {
+              name: "Text Secondary",
+              type: "TYPOGRAPHY",
+              value: null,
+              fontFamily: "Inter",
+            },
+            // Keep the original media components
             { name: "Wallpaper", type: "VIDEO", value: null },
             { name: "Dock Icons", type: "IMAGE", value: null },
             { name: "Font Primary", type: "FONT", value: null },
@@ -91,7 +147,7 @@ export const initialProfile = async () => {
       },
     });
 
-    // Create root folder for the user
+    // Root folder creation stays the same...
     const rootFolder = await tx.folder.create({
       data: {
         name: "Root",
@@ -100,12 +156,12 @@ export const initialProfile = async () => {
       },
     });
 
-    // Create initial welcome file in the root folder
+    // Welcome file creation stays the same...
     await tx.file.create({
       data: {
         name: "Welcome.txt",
         type: "text/plain",
-        size: 23, // Size of the content in bytes
+        size: 23,
         content: "Welcome to StellarOS!",
         folderId: rootFolder.id,
         profileId: profile.id,

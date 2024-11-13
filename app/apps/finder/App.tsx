@@ -1,12 +1,8 @@
-import React from "react";
-import FinderContent from "./FinderContent";
+// app/page.tsx
+"use client";
 
-const FinderApp: React.FC = () => {
-  return (
-    <div className="h-full w-full">
-      <FinderContent />
-    </div>
-  );
-};
+import FlowDashboard from "./components/FlowDashboard";
 
-export default FinderApp;
+export default function FlowPage() {
+  return <FlowDashboard />;
+}
